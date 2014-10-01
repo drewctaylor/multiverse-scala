@@ -29,6 +29,54 @@ object Predicate {
             } yield (a, b, c)).forall(predicate.tupled)
     }
 
+    def forAll[A, B, C, D, S](generatorA: (S) => List[A],
+                              generatorB: (S) => List[B],
+                              generatorC: (S) => List[C],
+                              generatorD: (S) => List[D],
+                              predicate: (A, B, C, D) => Boolean): (S) => Boolean = {
+        (state) =>
+            (for {
+                a <- generatorA(state)
+                b <- generatorB(state)
+                c <- generatorC(state)
+                d <- generatorD(state)
+            } yield (a, b, c, d)).forall(predicate.tupled)
+    }
+
+    def forAll[A, B, C, D, E, S](generatorA: (S) => List[A],
+                                 generatorB: (S) => List[B],
+                                 generatorC: (S) => List[C],
+                                 generatorD: (S) => List[D],
+                                 generatorE: (S) => List[E],
+                                 predicate: (A, B, C, D, E) => Boolean): (S) => Boolean = {
+        (state) =>
+            (for {
+                a <- generatorA(state)
+                b <- generatorB(state)
+                c <- generatorC(state)
+                d <- generatorD(state)
+                e <- generatorE(state)
+            } yield (a, b, c, d, e)).forall(predicate.tupled)
+    }
+
+    def forAll[A, B, C, D, E, F, S](generatorA: (S) => List[A],
+                                 generatorB: (S) => List[B],
+                                 generatorC: (S) => List[C],
+                                 generatorD: (S) => List[D],
+                                 generatorE: (S) => List[E],
+                                 generatorF: (S) => List[F],
+                                 predicate: (A, B, C, D, E, F) => Boolean): (S) => Boolean = {
+        (state) =>
+            (for {
+                a <- generatorA(state)
+                b <- generatorB(state)
+                c <- generatorC(state)
+                d <- generatorD(state)
+                e <- generatorE(state)
+                f <- generatorF(state)
+            } yield (a, b, c, d, e, f)).forall(predicate.tupled)
+    }
+
     def thereExists[A, S](generatorA: (S) => List[A],
                           predicate: (A) => Boolean): (S) => Option[A] = {
         (state) => scala.util.Random.shuffle(generatorA(state)).find(predicate)
@@ -55,6 +103,55 @@ object Predicate {
                 b <- generatorB(state)
                 c <- generatorC(state)
             } yield (a, b, c)).find(predicate.tupled)
+    }
+
+    def thereExists[A, B, C, D, S](generatorA: (S) => List[A],
+                                   generatorB: (S) => List[B],
+                                   generatorC: (S) => List[C],
+                                   generatorD: (S) => List[D],
+                                   predicate: (A, B, C, D) => Boolean): (S) => Option[(A, B, C, D)] = {
+        (state) =>
+            scala.util.Random.shuffle(for {
+                a <- generatorA(state)
+                b <- generatorB(state)
+                c <- generatorC(state)
+                d <- generatorD(state)
+            } yield (a, b, c, d)).find(predicate.tupled)
+    }
+
+    def thereExists[A, B, C, D, E, S](generatorA: (S) => List[A],
+                                      generatorB: (S) => List[B],
+                                      generatorC: (S) => List[C],
+                                      generatorD: (S) => List[D],
+                                      generatorE: (S) => List[E],
+                                      predicate: (A, B, C, D, E) => Boolean): (S) => Option[(A, B, C, D, E)] = {
+        (state) =>
+            scala.util.Random.shuffle(for {
+                a <- generatorA(state)
+                b <- generatorB(state)
+                c <- generatorC(state)
+                d <- generatorD(state)
+                e <- generatorE(state)
+            } yield (a, b, c, d, e)).find(predicate.tupled)
+    }
+
+
+    def thereExists[A, B, C, D, E, F, S](generatorA: (S) => List[A],
+                                      generatorB: (S) => List[B],
+                                      generatorC: (S) => List[C],
+                                      generatorD: (S) => List[D],
+                                      generatorE: (S) => List[E],
+                                      generatorF: (S) => List[F],
+                                      predicate: (A, B, C, D, E, F) => Boolean): (S) => Option[(A, B, C, D, E, F)] = {
+        (state) =>
+            scala.util.Random.shuffle(for {
+                a <- generatorA(state)
+                b <- generatorB(state)
+                c <- generatorC(state)
+                d <- generatorD(state)
+                e <- generatorE(state)
+                f <- generatorF(state)
+            } yield (a, b, c, d, e, f)).find(predicate.tupled)
     }
 
     class Given1[A, S](generatorA: (S) => List[A],
@@ -140,6 +237,137 @@ object Predicate {
             if (forAllList.forall(forAll => forAll(state))) thereExists(state) else None
         }
     }
+
+    class Given4[A, B, C, D, S](generatorA: (S) => List[A],
+                                generatorB: (S) => List[B],
+                                generatorC: (S) => List[C],
+                                generatorD: (S) => List[D],
+                                forAllList: List[(S) => Boolean],
+                                thereExists: (S) => Option[(A, B, C, D)]) {
+
+        def this(generatorA: (S) => List[A],
+                 generatorB: (S) => List[B],
+                 generatorC: (S) => List[C],
+                 generatorD: (S) => List[D],
+                 forAllList: List[(S) => Boolean] = List()) = {
+
+            this(generatorA, generatorB, generatorC, generatorD, forAllList, (state) => Some(
+                scala.util.Random.shuffle(generatorA(state)).head,
+                scala.util.Random.shuffle(generatorB(state)).head,
+                scala.util.Random.shuffle(generatorC(state)).head,
+                scala.util.Random.shuffle(generatorD(state)).head
+            ))
+        }
+
+        def forAll(predicate: (A, B, C, D) => Boolean): Given4[A, B, C, D, S] = {
+            new Given4(generatorA, generatorB, generatorC, generatorD, Predicate.forAll(generatorA, generatorB, generatorC, generatorD, predicate) :: forAllList, thereExists)
+        }
+
+        def thereExists(predicate: (A, B, C, D) => Boolean): Given4[A, B, C, D, S] = {
+            new Given4(generatorA, generatorB, generatorC, generatorD, forAllList, Predicate.thereExists(generatorA, generatorB, generatorC, generatorD, predicate))
+        }
+
+        def apply(state: S): Option[(A, B, C, D)] = {
+            if (forAllList.forall(forAll => forAll(state))) thereExists(state) else None
+        }
+    }
+
+    class Given5[A, B, C, D, E, S](generatorA: (S) => List[A],
+                                   generatorB: (S) => List[B],
+                                   generatorC: (S) => List[C],
+                                   generatorD: (S) => List[D],
+                                   generatorE: (S) => List[E],
+                                   forAllList: List[(S) => Boolean],
+                                   thereExists: (S) => Option[(A, B, C, D, E)]) {
+
+        def this(generatorA: (S) => List[A],
+                 generatorB: (S) => List[B],
+                 generatorC: (S) => List[C],
+                 generatorD: (S) => List[D],
+                 generatorE: (S) => List[E],
+                 forAllList: List[(S) => Boolean] = List()) = {
+
+            this(generatorA, generatorB, generatorC, generatorD, generatorE, forAllList, (state) => Some(
+                scala.util.Random.shuffle(generatorA(state)).head,
+                scala.util.Random.shuffle(generatorB(state)).head,
+                scala.util.Random.shuffle(generatorC(state)).head,
+                scala.util.Random.shuffle(generatorD(state)).head,
+                scala.util.Random.shuffle(generatorE(state)).head
+            ))
+        }
+
+        def forAll(predicate: (A, B, C, D, E) => Boolean): Given5[A, B, C, D, E, S] = {
+            new Given5(generatorA, generatorB, generatorC, generatorD, generatorE, Predicate.forAll(generatorA, generatorB, generatorC, generatorD, generatorE, predicate) :: forAllList, thereExists)
+        }
+
+        def thereExists(predicate: (A, B, C, D, E) => Boolean): Given5[A, B, C, D, E, S] = {
+            new Given5(generatorA, generatorB, generatorC, generatorD, generatorE, forAllList, Predicate.thereExists(generatorA, generatorB, generatorC, generatorD, generatorE, predicate))
+        }
+
+        def apply(state: S): Option[(A, B, C, D, E)] = {
+            if (forAllList.forall(forAll => forAll(state))) thereExists(state) else None
+        }
+    }
+
+
+    class Given6[A, B, C, D, E, F, S](generatorA: (S) => List[A],
+                                   generatorB: (S) => List[B],
+                                   generatorC: (S) => List[C],
+                                   generatorD: (S) => List[D],
+                                   generatorE: (S) => List[E],
+                                   generatorF: (S) => List[F],
+                                   forAllList: List[(S) => Boolean],
+                                   thereExists: (S) => Option[(A, B, C, D, E, F)]) {
+
+        def this(generatorA: (S) => List[A],
+                 generatorB: (S) => List[B],
+                 generatorC: (S) => List[C],
+                 generatorD: (S) => List[D],
+                 generatorE: (S) => List[E],
+                 generatorF: (S) => List[F],
+                 forAllList: List[(S) => Boolean] = List()) = {
+
+            this(generatorA, generatorB, generatorC, generatorD, generatorE, generatorF, forAllList, (state) => Some(
+                scala.util.Random.shuffle(generatorA(state)).head,
+                scala.util.Random.shuffle(generatorB(state)).head,
+                scala.util.Random.shuffle(generatorC(state)).head,
+                scala.util.Random.shuffle(generatorD(state)).head,
+                scala.util.Random.shuffle(generatorE(state)).head,
+                scala.util.Random.shuffle(generatorF(state)).head
+            ))
+        }
+
+        def forAll(predicate: (A, B, C, D, E, F) => Boolean): Given6[A, B, C, D, E, F, S] = {
+            new Given6(generatorA, generatorB, generatorC, generatorD, generatorE, generatorF, Predicate.forAll(generatorA, generatorB, generatorC, generatorD, generatorE, generatorF, predicate) :: forAllList, thereExists)
+        }
+
+        def thereExists(predicate: (A, B, C, D, E, F) => Boolean): Given6[A, B, C, D, E, F, S] = {
+            new Given6(generatorA, generatorB, generatorC, generatorD, generatorE, generatorF, forAllList, Predicate.thereExists(generatorA, generatorB, generatorC, generatorD, generatorE, generatorF, predicate))
+        }
+
+        def apply(state: S): Option[(A, B, C, D, E, F)] = {
+            if (forAllList.forall(forAll => forAll(state))) thereExists(state) else None
+        }
+    }
+
+    def given[A, B, C, D, E, F, S](generatorA: (S) => List[A],
+                                generatorB: (S) => List[B],
+                                generatorC: (S) => List[C],
+                                generatorD: (S) => List[D],
+                                generatorE: (S) => List[E],
+                                generatorF: (S) => List[F]) = new Given6[A, B, C, D, E, F, S](generatorA, generatorB, generatorC, generatorD, generatorE, generatorF)
+
+    def given[A, B, C, D, E, S](generatorA: (S) => List[A],
+                                generatorB: (S) => List[B],
+                                generatorC: (S) => List[C],
+                                generatorD: (S) => List[D],
+                                generatorE: (S) => List[E]) = new Given5[A, B, C, D, E, S](generatorA, generatorB, generatorC, generatorD, generatorE)
+
+    def given[A, B, C, D, S](generatorA: (S) => List[A],
+                             generatorB: (S) => List[B],
+                             generatorC: (S) => List[C],
+                             generatorD: (S) => List[D]) = new Given4[A, B, C, D, S](generatorA, generatorB, generatorC, generatorD)
+
 
     def given[A, B, C, S](generatorA: (S) => List[A],
                           generatorB: (S) => List[B],

@@ -1,7 +1,7 @@
 package edu.gatech.dt87.scalaverse.ui
 
 import javafx.application.Platform
-import javafx.beans.value.{ObservableValue, ChangeListener}
+import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.concurrent.Worker
 import javafx.embed.swing.JFXPanel
 import javafx.scene.Scene
@@ -23,7 +23,7 @@ import netscape.javascript.JSObject
  * @tparam S the server type
  */
 
-class JFrameWithWebView[S](url : String, globalObjectName: String, serverObjectName : String, server : S) extends JFrame {
+class JFrameWithWebView[S](url: String, globalObjectName: String, serverObjectName: String, server: S) extends JFrame {
     /**
      * An alternate constructor.
      *
@@ -32,7 +32,7 @@ class JFrameWithWebView[S](url : String, globalObjectName: String, serverObjectN
      * @param url the WebView url
      * @param server the server object
      */
-    def this(url : String, server : S) {
+    def this(url: String, server: S) {
         this(url, "window", "server", server)
     }
 
