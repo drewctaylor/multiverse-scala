@@ -13,8 +13,8 @@ object Fabula {
         }
     }
 
-    def fabula[S, T1, T2](actionContext : ActionContext[S, T1]) : Seq[EventContext[S, _]] = {
-        actionContext.actionElementContextSequence.flatMap {
+    def fabula[S, T1, T2](actionContext : StrategyContext[S, T1]) : Seq[EventContext[S, _]] = {
+        actionContext.stepContexts.flatMap {
             case eventContext: EventContext[S, T1] => Seq(eventContext)
             case subgoalContext: SubgoalContext[S, T1, T2] => fabula(subgoalContext.goalContext)
         }

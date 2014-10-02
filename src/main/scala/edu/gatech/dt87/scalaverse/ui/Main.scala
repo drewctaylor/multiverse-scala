@@ -22,10 +22,10 @@ object Main {
             Character("Sydney", "Andrews", FEMALE, Set(MALE, FEMALE), 30),
             Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))), Map("" -> Narration("", "Once upon a time . . .")))
 
-        val alwaysFail = Action[StateNarration, Unit]("Action - Always Fail",
+        val alwaysFail = Strategy[StateNarration, Unit]("Strategy - Always Fail",
             new Event[StateNarration, Unit]("Action - Always Fail Precondition", (stateNarration, _) => None))
 
-        val divorceCauseAffair1 = Action[StateNarration, Unit]("Divorce Caused By Affair",
+        val divorceCauseAffair1 = Strategy[StateNarration, Unit]("Divorce Caused By Affair",
             new Event[StateNarration, Unit]("Divorce Caused By Affair Precondition", (stateNarration, _) => {
                 given(character, character, character).thereExists((spouse1, spouse2, other) => {
                     areMarried(spouse1, spouse2) && compatible(spouse1, other) && other.spouse == None
@@ -46,7 +46,7 @@ object Main {
             })
         )
 
-        val divorceCauseAffair2 = Action[StateNarration, Unit]("Divorce Caused By Affair With Married",
+        val divorceCauseAffair2 = Strategy[StateNarration, Unit]("Divorce Caused By Affair With Married",
             new Event[StateNarration, Unit]("Divorce Caused By Affair Precondition", (stateNarration, _) => {
                 given(character, character, character, character).thereExists((spouse1, spouse2, spouse3, spouse4) => {
                     areMarried(spouse1, spouse2) && areMarried(spouse3, spouse4) && compatible(spouse1, spouse3) && distinct(spouse1, spouse3) && distinct(spouse1, spouse4)
@@ -69,7 +69,7 @@ object Main {
             })
         )
 
-        val divorceCauseAddiction = Action[StateNarration, Unit]("Divorce Caused By Addiction",
+        val divorceCauseAddiction = Strategy[StateNarration, Unit]("Divorce Caused By Addiction",
             new Event[StateNarration, Unit]("Divorce Caused By Addiction Precondition", (stateNarration, _) => {
                 given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
                     case Some(_) => Some(StateNarration(stateNarration.state, Map("" -> Narration("", ""))))
@@ -86,7 +86,7 @@ object Main {
             })
         )
 
-        val divorceCauseWork = Action[StateNarration, Unit]("Divorce Caused By Work",
+        val divorceCauseWork = Strategy[StateNarration, Unit]("Divorce Caused By Work",
             new Event[StateNarration, Unit]("Divorce Caused By Work Precondition", (stateNarration, _) => {
                 given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
                     case Some(_) => Some(StateNarration(stateNarration.state, Map("" -> Narration("", ""))))
@@ -103,7 +103,7 @@ object Main {
             })
         )
 
-        val divorceCauseDistance = Action[StateNarration, Unit]("Divorce Caused By Distance",
+        val divorceCauseDistance = Strategy[StateNarration, Unit]("Divorce Caused By Distance",
             new Event[StateNarration, Unit]("Divorce Caused By Distance Precondition", (stateNarration, _) => {
                 given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
                     case Some(_) => Some(StateNarration(stateNarration.state, Map("" -> Narration("", ""))))
@@ -120,7 +120,7 @@ object Main {
             })
         )
 
-        val divorceCauseDisapproval = Action[StateNarration, Unit]("Divorce Caused By Disapproval",
+        val divorceCauseDisapproval = Strategy[StateNarration, Unit]("Divorce Caused By Disapproval",
             new Event[StateNarration, Unit]("Divorce Caused By Disapproval Precondition", (stateNarration, _) => {
                 given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
                     case Some(_) => Some(StateNarration(stateNarration.state, Map("" -> Narration("", ""))))
@@ -141,7 +141,7 @@ object Main {
             alwaysFail,
             marriageNoHistory)
 
-        lazy val marriageNoHistory: Action[StateNarration, Unit] = Action[StateNarration, Unit]("Marriage - No History",
+        lazy val marriageNoHistory: Strategy[StateNarration, Unit] = Strategy[StateNarration, Unit]("Marriage - No History",
             new Event[StateNarration, Unit]("Marriage - No History - Precondition", (stateNarration, _) => {
                 given(characterIs(single), characterIs(single)).thereExists((lover1, lover2) => {
                     compatible(lover1, lover2) && !lover1.ex.contains(lover2)
@@ -181,7 +181,7 @@ object Main {
             divorceCauseDistance,
             divorceCauseWork)
 
-        lazy val marriageAndThenDivorceAction = new Action[StateNarration, Unit]("Marriage, then Divorce",
+        lazy val marriageAndThenDivorceAction = new Strategy[StateNarration, Unit]("Marriage, then Divorce",
            new  Subgoal[StateNarration, (Unit), (Unit)]((s, t) => { t }, marriageGoal),
             new Subgoal[StateNarration, (Unit), (Unit)]((s, t) => { t }, divorceGoal))
 

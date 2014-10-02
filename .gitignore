@@ -1,3 +1,4 @@
 .idea/
 target/
-scalaverse.iml
+*.iml
+.DS_Store

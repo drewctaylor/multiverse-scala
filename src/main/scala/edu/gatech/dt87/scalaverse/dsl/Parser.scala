@@ -5,7 +5,7 @@ import scala.util.parsing.combinator.RegexParsers
 class SParser extends RegexParsers {
 
     def event="event"~identifier
-    def action="action"~identifier~rep(event)
+    def action="strategy"~identifier~rep(event)
     def goal= "goal"~identifier~description~rep(action)
 
     def description = """"[^"]*"""".r
@@ -24,7 +24,7 @@ case class Block(statements : List[Statement]) extends Statement
 case class ForLoop(variable: String, lowerBound:Int, upperBound: Int, statement:Statement) extends Statement
 
 object Parser extends SParser with App {
-    parseAll(goal, "goal goalname     \"This is a test\" action action1 action action2 event event1 event event2") match {
+    parseAll(goal, "goal goalname     \"This is a test\" strategy action1 strategy action2 event event1 event event2") match {
         case Success(lup, _) => println(lup)
         case x => println(x)
     }

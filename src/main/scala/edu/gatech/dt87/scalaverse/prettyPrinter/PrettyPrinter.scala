@@ -9,13 +9,13 @@ object PrettyPrinter {
         })
     }
 
-    def print[S, T1, T2](actionContext : ActionContext[S, T1], depth : Int) : String = {
-        s"""${" " * depth}Action "${actionContext.action.name}"\n""" + actionContext.actionElementContextSequence.foldLeft("")((string, actionElementContext) => {
+    def print[S, T1, T2](strategyContext : StrategyContext[S, T1], depth : Int) : String = {
+        s"""${" " * depth}Strategy "${strategyContext.strategy.name}"\n""" + strategyContext.stepContexts.foldLeft("")((string, actionElementContext) => {
             string + print(actionElementContext, depth + 4)
         })
     }
 
-    def print[S, T1, T2](actionElementContext : ActionElementContext[S], depth : Int) : String = {
+    def print[S, T1, T2](actionElementContext : StepContext[S], depth : Int) : String = {
         actionElementContext match {
             case eventContext : EventContext[S, T1] => print(eventContext, depth)
             case subgoalContext : SubgoalContext[S, T1, T2] => print(subgoalContext, depth)

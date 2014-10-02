@@ -24,13 +24,13 @@ object Main {
             Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))), Map("" -> Narration("", "Once upon a time . . .")))
 
         val goalLife = Goal[StateNarration, (Character)]("Life",
-            Action[StateNarration, (Character)]("Life - No Operation",
+            Strategy[StateNarration, (Character)]("Life - No Operation",
                 new Event[StateNarration, (Character)]("Precondition", (stateNarration, parameter) => if(parameter.life == ALIVE) Some(stateNarration) else None),
                 new Event[StateNarration, (Character)]("Narration", (stateNarration, parameter) => {
                     Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${parameter.first} lies by the pool."))))
                 })
             ),
-            Action[StateNarration, (Character)]("Life - Revive",
+            Strategy[StateNarration, (Character)]("Life - Revive",
                 new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.life == DEAD) Some(stateNarration) else None),
                 new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
                     val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.life set ALIVE
@@ -41,13 +41,13 @@ object Main {
         )
 
         val goalSingle = Goal[StateNarration, (Character)]("Single",
-            Action[StateNarration, (Character)]("Single - No Operation",
+            Strategy[StateNarration, (Character)]("Single - No Operation",
                 new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse == None) Some(stateNarration) else None),
                 new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
                     Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${character.first} lies by the pool, dreaming of love."))))
                 })
             ),
-            Action[StateNarration, (Character)]("Single - By Death",
+            Strategy[StateNarration, (Character)]("Single - By Death",
                 new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse.isDefined) Some(stateNarration) else None),
                 new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
                     val spouse = character.spouse.get
@@ -58,7 +58,7 @@ object Main {
                     Some(StateNarration(state2, Map("" -> Narration("", s"${spouse.first} dies, leaving ${character.first} alone."))))
                 })
             ),
-            Action[StateNarration, (Character)]("Single - By Divorce",
+            Strategy[StateNarration, (Character)]("Single - By Divorce",
                 new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse.isDefined) Some(stateNarration) else None),
                 new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
                     val spouse = character.spouse.get
@@ -71,7 +71,7 @@ object Main {
         )
 
         val goalMarriage = new Goal[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
-            Set(new Action[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
+            Set(new Strategy[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
                 new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._1) }, goalLife),
                 new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._2) }, goalLife),
                 new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._1) }, goalSingle),
@@ -86,7 +86,7 @@ object Main {
         )
 
         val goalMarriageTop = new Goal[StateNarration, Any]("Marriage",
-            Set(new Action[StateNarration, Any]("Marriage",
+            Set(new Strategy[StateNarration, Any]("Marriage",
                 new Subgoal[StateNarration, Any, (Character, Character)]((stateNarration, any) => {
                     given(character, character).thereExists((character1, character2) => {
                         distinct(character1, character2) && compatible(character1, character2) && (

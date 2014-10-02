@@ -6,16 +6,16 @@ package edu.gatech.dt87.scalaverse.planner
  * @param goal the Goal
  * @param actionContextSequence the sequence of ActionContexts
  * @tparam S the state type
- * @tparam T the parameter tuple type
+ * @tparam T the parameter type
  */
-case class GoalContext[S, T](goal: Goal[S, T], actionContextSequence: ActionContext[S, T]*) {
+case class GoalContext[S, T](goal: Goal[S, T], actionContextSequence: StrategyContext[S, T]*) {
     /**
-     * Construct a GoalContext from this GoalContext and the given ActionContext.
+     * Construct a GoalContext from this GoalContext and the given StrategyContext.
      *
-     * @param actionContext the given ActionContext.
+     * @param actionContext the given StrategyContext.
      * @return the constructed GoalContext.
      */
-    def append(actionContext: ActionContext[S, T]): GoalContext[S, T] = {
+    def append(actionContext: StrategyContext[S, T]): GoalContext[S, T] = {
         new GoalContext[S, T](goal, actionContext +: actionContextSequence: _*)
     }
 
