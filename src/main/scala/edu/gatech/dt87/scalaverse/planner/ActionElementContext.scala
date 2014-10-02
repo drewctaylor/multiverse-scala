@@ -1,13 +1,13 @@
 package edu.gatech.dt87.scalaverse.planner
 
 /**
- * An ActionElementContext is either an EventContext or a GoalContext.
+ * An ActionElementContext is either an EventContext or a SubgoalContext.
  *
  * @tparam S the state type
  */
 sealed trait ActionElementContext[S] {
     /**
-     * The state succeeding the Event of the EventContext or the Goal of the GoalContext.
+     * The state succeeding the Event of the EventContext or the Subgoal of the SubgoalContext.
      */
     def succeeding(): Option[S]
 }
@@ -18,37 +18,21 @@ sealed trait ActionElementContext[S] {
  * @param event the event
  * @param succeeding the succeeding state
  * @tparam S the state type
+ * @tparam T the parameter tuple type
  */
-case class EventContext[S](event: Event[S], succeeding: Option[S]) extends ActionElementContext[S]
+case class EventContext[S, T](event: Event[S, T], succeeding: Option[S]) extends ActionElementContext[S]
 
 /**
- * A GoalContext is a Goal and a sequence of ActionContexts.
+ * An SubgoalContext is a Sugboal and a GoalContext.
  *
- * @param goal the Goal
- * @param actionContextSequence the sequence of ActionContexts
+ * @param subgoal the subgoal
+ * @param goalContext the goal context
  * @tparam S the state type
+ * @tparam T1 the parameter tuple type
+ * @tparam T2 the succeeding parameter tuple type
  */
-case class GoalContext[S](goal: Goal[S], actionContextSequence: ActionContext[S]*) extends ActionElementContext[S] {
-    /**
-     * Construct a GoalContext from this GoalContext and the given ActionContext.
-     *
-     * @param actionContext the given ActionContext.
-     * @return the constructed GoalContext.
-     */
-    def append(actionContext: ActionContext[S]): GoalContext[S] = {
-        new GoalContext[S](goal, actionContext +: actionContextSequence:_*)
-    }
-
-    /**
-     * The succeeding state.
-     *
-     * @return succeeding state.
-     */
-    def succeeding(): Option[S] = {
-        actionContextSequence.headOption match {
-            case Some(actionContext) => actionContext.succeeding()
-            case None => None
-        }
+case class SubgoalContext[S, T1, T2](subgoal: Subgoal[S, T1, T2], goalContext: GoalContext[S, T2]) extends ActionElementContext[S] {
+    def succeeding() : Option[S] = {
+        goalContext.succeeding()
     }
 }
-

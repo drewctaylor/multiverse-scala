@@ -1,52 +1,23 @@
 package edu.gatech.dt87.scalaverse.planner
 
 /**
- * An ActionElement is either an Event or a Goal.
+ * An ActionElement is either an Event or a Subgoal.
  *
  * @tparam S the state type
+ * @tparam T the parameter tuple type
  */
-sealed trait ActionElement[S] {
-    /**
-     * The name of the Event or Goal.
-     */
-    val name: String
-}
+sealed trait ActionElement[S, T]
 
 /**
- * A Goal is a set of Actions, any one of which may satisfy the Goal.
+ * A Subgoal is a goal and a transition from the a parameter tuple to a succeeding parameter tuple.
  *
- * @param name the name of the Goal
- * @param actionSet the set of Actions, any one of which may satisfy the Goal
+ * @param transition the transition
+ * @param goal the goal
  * @tparam S the state type
+ * @tparam T1 the parameter tuple type
+ * @tparam T2 the succeeding parameter tuple type
  */
-case class Goal[S](name: String, actionSet: Set[Action[S]]) extends ActionElement[S]
-
-object Goal {
-    val iterator = Iterator.from(0)
-
-    /**
-     * A Goal factory.
-     *
-     * @param name the name of the Goal.
-     * @param actionSequence the set of Actions, any one of which may satisfy the Goal.
-     * @tparam S the state type.
-     * @return the Goal.
-     */
-    def apply[S](name: String, actionSequence: Action[S]*): Goal[S] = {
-         Goal[S](name, actionSequence.toSet)
-    }
-
-    /**
-     * A Goal factory; the system chooses the name of the Goal.
-     *
-     * @param actionSequence the set of Actions, any one of which may satisfy the Goal
-     * @tparam S the state type
-     * @return the Goal
-     */
-    def apply[S](actionSequence: Action[S]*): Goal[S] = {
-         Goal[S](s"Unnamed Goal ${iterator.next()}", actionSequence.toSet)
-    }
-}
+case class Subgoal[S, T1, T2](transition: (S, T1) => T2, goal: Goal[S, T2]) extends ActionElement[S, T1]
 
 /**
  * An Event is a transition from a state to either Some state or no state.
@@ -54,8 +25,9 @@ object Goal {
  * @param name the name of the Event.
  * @param transition the transition of the Event.
  * @tparam S the state type.
+ * @tparam T the parameter tuple type
  */
-case class Event[S](name: String, transition: S => Option[S]) extends ActionElement[S]
+case class Event[S, T](name: String, transition: (S, T) => Option[S]) extends ActionElement[S, T]
 
 object Event {
     val iterator = Iterator.from(0)
@@ -65,36 +37,10 @@ object Event {
      *
      * @param transition the transition of the Event.
      * @tparam S the state type.
+     * @tparam T the parameter tuple type
      * @return the Event.
      */
-    def apply[S](transition: S => Option[S]): Event[S] = {
-        Event[S](s"Unnamed Event ${iterator.next()}", transition)
+    def apply[S, T](transition: (S, T) => Option[S]): Event[S, T] = {
+        Event[S, T](s"Unnamed Event ${iterator.next()}", transition)
     }
 }
-
-// later?
-//case class PEventTransition[S,A,B](run: (S,A) => Option[(S,B)]) {
-//
-//    def map[C](f: B => C) = PEventTransition[S,A,C] {
-//        (s,a) => run(s,a) map { case (s,b) => (s,f(b)) }
-//    }
-//
-//    def compose[C](t0: PEventTransition[S,C,A]): PEventTransition[S,C,B] = t0 andThen this
-//
-//    /** possibly useful functions */
-//    def andThen[C](t2: PEventTransition[S,B,C]) = PEventTransition[S,A,C] {
-//        (s,a) => run(s,a) flatMap { case (s,b) => t2.run(s,b) }
-//    }
-//
-//    def toSimpleEvent(name: String)(implicit e1: Unit =:= A) =
-//        new Event[S](name, s => run(s,e1(())) map { case (s,b) => s })
-//
-//}
-//
-//case class ParameterizedEvent[S,A,B](name: String, transition: (S,A) => Option[(S,B)]) extends ActionElement[S]
-//object PEventTransition {
-//    def event00[S](name: String, transition: S => Option[S]) = ParameterizedEvent[S,Unit,Unit](name, (s,_) => transition(s).map(_ -> ()))
-//    def event20[S,A,B](name: String, transition: (S,A,B) => Option[S]) = ParameterizedEvent[S,(A,B),Unit](name, {
-//        case (s, (a,b)) => transition(s,a,b).map(_ -> ())
-//    })
-//}

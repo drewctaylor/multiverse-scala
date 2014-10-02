@@ -6,16 +6,17 @@ package edu.gatech.dt87.scalaverse.planner
  * @param action the Action.
  * @param actionElementContextSequence the sequence of ActionElementContexts: GoalContexts and EventContexts.
  * @tparam S the state type.
+ * @tparam T the parameter tuple type.
  */
-case class ActionContext[S](action: Action[S], actionElementContextSequence: ActionElementContext[S]*) {
+case class ActionContext[S, T](action: Action[S, T], actionElementContextSequence: ActionElementContext[S]*) {
     /**
      * Construct an ActionContext from this ActionContext and the given ActionElementContext.
      *
      * @param actionElementContext the given ActionElementContext.
      * @return the constructed ActionContext.
      */
-    def append(actionElementContext: ActionElementContext[S]): ActionContext[S] = {
-        new ActionContext[S](action, actionElementContextSequence :+ actionElementContext:_*)
+    def append(actionElementContext: ActionElementContext[S]): ActionContext[S, T] = {
+        new ActionContext[S, T](action, actionElementContextSequence :+ actionElementContext: _*)
     }
 
     /**

@@ -2,6 +2,7 @@ package edu.gatech.dt87.scalaverse
 
 import edu.gatech.dt87.scalaverse.planner._
 import edu.gatech.dt87.scalaverse.predicate.Predicate._
+import edu.gatech.dt87.scalaverse.prettyPrinter._
 import edu.gatech.dt87.scalaverse.story.Predicate._
 import edu.gatech.dt87.scalaverse.story._
 import monocle.function._
@@ -22,151 +23,119 @@ object Main {
             Character("Sydney", "Andrews", FEMALE, Set(MALE, FEMALE), 30),
             Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))), Map("" -> Narration("", "Once upon a time . . .")))
 
-        val divorceCauseAffair = Action[StateNarration]("Divorce Caused By Affair",
-            new Event[StateNarration]("Divorce Caused By Affair Precondition", (stateNarration) => {
-                given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
-                    case Some(_) => Some(StateNarration(stateNarration.state, Map(""->Narration("",""))))
-                    case None => None
-                }
-            }),
-            new Event[StateNarration]("Divorce Caused By Affair Text", (stateNarration) => {
-                val couple = given(character, character).thereExists(areMarried).apply(stateNarration.state).get
+        val goalLife = Goal[StateNarration, (Character)]("Life",
+            Action[StateNarration, (Character)]("Life - No Operation",
+                new Event[StateNarration, (Character)]("Precondition", (stateNarration, parameter) => if(parameter.life == ALIVE) Some(stateNarration) else None),
+                new Event[StateNarration, (Character)]("Narration", (stateNarration, parameter) => {
+                    Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${parameter.first} lies by the pool."))))
+                })
+            ),
+            Action[StateNarration, (Character)]("Life - Revive",
+                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.life == DEAD) Some(stateNarration) else None),
+                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
+                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.life set ALIVE
 
-                val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set None
-                val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(couple._2)) |->> Character.spouse set None
-
-                Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} divorce because of an affair."))))
-            })
+                    Some(StateNarration(state1, Map("" -> Narration("", s"${character.first} returns to Melrose Place, very much alive."))))
+                })
+            )
         )
 
-        val divorceCauseAddiction = Action[StateNarration]("Divorce Caused By Addiction",
-            new Event[StateNarration]("Divorce Caused By Addiction Precondition", stateNarration => {
-                given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
-                    case Some(_) => Some(StateNarration(stateNarration.state, Map(""->Narration("",""))))
-                    case None => None
-                }
-            }),
-            new Event[StateNarration]("Divorce Caused By Addiction Text", stateNarration => {
-                val couple = given(character, character).thereExists(areMarried).apply(stateNarration.state).get
+        val goalSingle = Goal[StateNarration, (Character)]("Single",
+            Action[StateNarration, (Character)]("Single - No Operation",
+                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse == None) Some(stateNarration) else None),
+                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
+                    Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${character.first} lies by the pool, dreaming of love."))))
+                })
+            ),
+            Action[StateNarration, (Character)]("Single - By Death",
+                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse.isDefined) Some(stateNarration) else None),
+                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
+                    val spouse = character.spouse.get
+                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
+                    val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
+                    val state3 = state2 |-> State.characterSet |->> index(state2.characterSet.indexOf(spouse)) |->> Character.life set DEAD
 
-                val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set None
-                val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set None
+                    Some(StateNarration(state2, Map("" -> Narration("", s"${spouse.first} dies, leaving ${character.first} alone."))))
+                })
+            ),
+            Action[StateNarration, (Character)]("Single - By Divorce",
+                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse.isDefined) Some(stateNarration) else None),
+                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
+                    val spouse = character.spouse.get
+                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
+                    val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
 
-                Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} divorce because of an addiction."))))
-            })
+                    Some(StateNarration(state2, Map("" -> Narration("", s"${character.first} and ${spouse.first} divorce."))))
+                })
+            )
         )
 
-        val divorceCauseWork = Action[StateNarration]("Divorce Caused By Work",
-            new Event[StateNarration]("Divorce Caused By Work Precondition", stateNarration => {
-                given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
-                    case Some(_) => Some(StateNarration(stateNarration.state, Map(""->Narration("",""))))
-                    case None => None
-                }
-            }),
-            new Event[StateNarration]("Divorce Caused By Work Text", stateNarration => {
-                val couple = given(character, character).thereExists(areMarried).apply(stateNarration.state).get
+        val goalMarriage = new Goal[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
+            Set(new Action[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
+                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._1) }, goalLife),
+                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._2) }, goalLife),
+                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._1) }, goalSingle),
+                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._2) }, goalSingle),
+                new Event[StateNarration, (Character, Character)]("Narration", (stateNarration, couple) => {
+                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set Some(couple._2)
+                    val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set Some(couple._1)
 
-                val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set None
-                val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set None
-
-                Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} divorce because of work."))))
-            })
+                    Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} marry."))))
+                })
+            ))
         )
 
-        val divorceCauseDistance = Action[StateNarration]("Divorce Caused By Distance",
-            new Event[StateNarration]("Divorce Caused By Distance Precondition", stateNarration => {
-                given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
-                    case Some(_) => Some(StateNarration(stateNarration.state, Map(""->Narration("",""))))
-                    case None => None
-                }
-            }),
-            new Event[StateNarration]("Divorce Caused By Distance Text", stateNarration => {
-                val couple = given(character, character).thereExists(areMarried).apply(stateNarration.state).get
+        val goalMarriageTop = new Goal[StateNarration, Any]("Marriage",
+            Set(new Action[StateNarration, Any]("Marriage",
+                new Subgoal[StateNarration, Any, (Character, Character)]((stateNarration, any) => {
+                    given(character, character).thereExists((character1, character2) => {
+                        distinct(character1, character2) && compatible(character1, character2) && (
+                            (character1.spouse.isDefined && character1.spouse != character2) ||
+                            !character1.spouse.isDefined)
+                    })(stateNarration.state).get
+                }, goalMarriage))
+        ))
 
-                val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set None
-                val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set None
+        var goalSet = Set(goalMarriageTop)
 
-                Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} divorce because of distance."))))
-            })
-        )
+        val eventSequence = Seq[EventContext[StateNarration, _]]()
+        val goalContext1 = Planner.satisfyGoal(state, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(state, (), goalSet).toSeq).head)
+        val goalContext2 = Planner.satisfyGoal(goalContext1.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext1.succeeding().get, (), goalSet).toSeq).head)
+        val goalContext3 = Planner.satisfyGoal(goalContext2.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext2.succeeding().get, (), goalSet).toSeq).head)
+        val goalContext4 = Planner.satisfyGoal(goalContext3.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext3.succeeding().get, (), goalSet).toSeq).head)
+        val goalContext5 = Planner.satisfyGoal(goalContext4.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext4.succeeding().get, (), goalSet).toSeq).head)
+        val goalContext6 = Planner.satisfyGoal(goalContext5.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext5.succeeding().get, (), goalSet).toSeq).head)
 
-        val divorceCauseDisapproval = Action[StateNarration]("Divorce Caused By Disapproval",
-            new Event[StateNarration]("Divorce Caused By Disapproval Precondition", stateNarration => {
-                given(character, character).thereExists(areMarried).apply(stateNarration.state) match {
-                    case Some(_) => Some(StateNarration(stateNarration.state, Map(""->Narration("",""))))
-                    case None => None
-                }
-            }),
-            new Event[StateNarration]("Divorce Caused By Disapproval Text", stateNarration => {
-                val couple = given(character, character).thereExists(areMarried).apply(stateNarration.state).get
-
-                val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set None
-                val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set None
-
-                Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} divorce because of distance."))))
-            })
-        )
-
-        val marriage = Action[StateNarration]("Marriage",
-            Event[StateNarration]((stateNarration : StateNarration) => {
-                given(characterIs(single), characterIs(single)).thereExists(compatible).apply(stateNarration.state) match {
-                    case Some(_) => Some(StateNarration(stateNarration.state, Map(""->Narration("",""))))
-                    case None => None
-                }
-            }),
-            Event[StateNarration]((stateNarration : StateNarration) => {
-                val couple = given(characterIs(single), characterIs(single)).thereExists(compatible).apply(stateNarration.state) .get
-
-                val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set Some(couple._2)
-                val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set Some(couple._1)
-
-                Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} marry."))))
-            })
-        )
-
-        val divorceGoal = Goal[StateNarration]("Divorce",
-            divorceCauseAddiction,
-            divorceCauseAffair,
-            divorceCauseAddiction,
-            divorceCauseAffair,
-            divorceCauseDisapproval,
-            divorceCauseDistance,
-            divorceCauseWork)
-
-        val marriageGoal =  Goal[StateNarration]("Marriage",
-            marriage)
-
-        val eventSequence = Seq[EventContext[StateNarration]]()
-        val planner = Planner[StateNarration](marriageGoal, divorceGoal)
-        val goalContext1 = planner.satisfyGoal(state, scala.util.Random.shuffle(planner.satisfiableGoalSet(state).toSeq).head)
-        val goalContext2 = planner.satisfyGoal(goalContext1.succeeding().get, scala.util.Random.shuffle(planner.satisfiableGoalSet(goalContext1.succeeding().get).toSeq).head)
-        val goalContext3 = planner.satisfyGoal(goalContext2.succeeding().get, scala.util.Random.shuffle(planner.satisfiableGoalSet(goalContext2.succeeding().get).toSeq).head)
-        val goalContext4 = planner.satisfyGoal(goalContext3.succeeding().get, scala.util.Random.shuffle(planner.satisfiableGoalSet(goalContext3.succeeding().get).toSeq).head)
-        val goalContext5 = planner.satisfyGoal(goalContext4.succeeding().get, scala.util.Random.shuffle(planner.satisfiableGoalSet(goalContext4.succeeding().get).toSeq).head)
-        val goalContext6 = planner.satisfyGoal(goalContext5.succeeding().get, scala.util.Random.shuffle(planner.satisfiableGoalSet(goalContext5.succeeding().get).toSeq).head)
-
-        var lastState = state
-
-        val fullEventSequence = eventSequence ++
-            goalContext1 ++
-            goalContext2 ++
-            goalContext3 ++
-            goalContext4 ++
-            goalContext5 ++
-            goalContext6
-
-        fullEventSequence.map(eventContext => {
-            System.out.println(eventContext.event.name)
-            System.out.println(eventContext.succeeding.get.state.characterSet.filter(_.first=="Amanda"))
+        Fabula.fabula(goalContext1).foreach((eventContext : EventContext[StateNarration, _]) => {
+            System.out.println(eventContext.succeeding.get.narrationMap("").text)
         })
 
-        fullEventSequence.map(eventContext => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text);
-            if(lastState.state.characterSet.filter(_.first=="Amanda") != eventContext.succeeding.get.state.characterSet.filter(_.first=="Amanda")) {
-                System.out.println("(This affected Amanda.)");
-            } else {
-            }
-            lastState = eventContext.succeeding.get
+        Fabula.fabula(goalContext2).foreach((eventContext : EventContext[StateNarration, _]) => {
+            System.out.println(eventContext.succeeding.get.narrationMap("").text)
         })
-    }
+
+        Fabula.fabula(goalContext3).foreach((eventContext : EventContext[StateNarration, _]) => {
+            System.out.println(eventContext.succeeding.get.narrationMap("").text)
+        })
+
+        Fabula.fabula(goalContext4).foreach((eventContext : EventContext[StateNarration, _]) => {
+            System.out.println(eventContext.succeeding.get.narrationMap("").text)
+        })
+
+        Fabula.fabula(goalContext5).foreach((eventContext : EventContext[StateNarration, _]) => {
+            System.out.println(eventContext.succeeding.get.narrationMap("").text)
+        })
+
+        Fabula.fabula(goalContext6).foreach((eventContext : EventContext[StateNarration, _]) => {
+            System.out.println(eventContext.succeeding.get.narrationMap("").text)
+        })
+
+        System.out.println(PrettyPrinter.print(goalContext1));
+        System.out.println(PrettyPrinter.print(goalContext2));
+        System.out.println(PrettyPrinter.print(goalContext3));
+        System.out.println(PrettyPrinter.print(goalContext4));
+        System.out.println(PrettyPrinter.print(goalContext5));
+        System.out.println(PrettyPrinter.print(goalContext6));
+
+   }
 }
