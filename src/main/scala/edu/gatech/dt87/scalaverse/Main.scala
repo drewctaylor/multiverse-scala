@@ -12,7 +12,7 @@ import monocle.syntax._
 
 object Main {
     def main(args: Array[String]) {
-        val state = StateNarration(State(List(
+        var state = StateNarration(State(List(
             Character("Amanda", "Woodward", FEMALE, Set(MALE), 30),
             Character("Alison", "Parker", FEMALE, Set(MALE), 30),
             Character("Jane", "Andrews", FEMALE, Set(MALE), 30),
@@ -22,7 +22,7 @@ object Main {
             Character("Peter", "Burns", MALE, Set(FEMALE), 30),
             Character("Michael", "Mancini", MALE, Set(FEMALE), 30),
             Character("Sydney", "Andrews", FEMALE, Set(MALE, FEMALE), 30),
-            Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))), Map("" -> Narration("", "Once upon a time . . .")))
+            Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))) , Map("" -> Narration("", "Once upon a time . . .")))
 
         val goalLife = Goal[StateNarration, (Character)]("Life",
             Strategy[StateNarration, (Character)]("Life - No Operation",
@@ -55,8 +55,7 @@ object Main {
                     val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
                     val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
                     val state3 = state2 |-> State.characterSet |->> index(state2.characterSet.indexOf(spouse)) |->> Character.life set DEAD
-
-                    Some(StateNarration(state2, Map("" -> Narration("", s"${spouse.first} dies, leaving ${character.first} alone."))))
+                    Some(StateNarration(state3, Map("" -> Narration("", s"${spouse.first} dies, leaving ${character.first} alone."))))
                 })
             ),
             Strategy[StateNarration, (Character)]("Single - By Divorce",
@@ -90,9 +89,7 @@ object Main {
             Set(new Strategy[StateNarration, Any]("Marriage",
                 new Subgoal[StateNarration, Any, (Character, Character)]((stateNarration, any) => {
                     given(character, character).thereExists((character1, character2) => {
-                        distinct(character1, character2) && compatible(character1, character2) && (
-                            (character1.spouse.isDefined && character1.spouse != character2) ||
-                            !character1.spouse.isDefined)
+                        compatible(character1, character2) && !areMarried(character1, character2)
                     })(stateNarration.state).get
                 }, goalMarriage))
         ))
@@ -100,43 +97,14 @@ object Main {
         var goalSet = Set(goalMarriageTop)
 
         val eventSequence = Seq[EventContext[StateNarration, _]]()
-        val goalContext1 = Planner.satisfyGoal(state, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(state, (), goalSet).toSeq).head)
-        val goalContext2 = Planner.satisfyGoal(goalContext1.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext1.succeeding().get, (), goalSet).toSeq).head)
-        val goalContext3 = Planner.satisfyGoal(goalContext2.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext2.succeeding().get, (), goalSet).toSeq).head)
-        val goalContext4 = Planner.satisfyGoal(goalContext3.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext3.succeeding().get, (), goalSet).toSeq).head)
-        val goalContext5 = Planner.satisfyGoal(goalContext4.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext4.succeeding().get, (), goalSet).toSeq).head)
-        val goalContext6 = Planner.satisfyGoal(goalContext5.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext5.succeeding().get, (), goalSet).toSeq).head)
+        var goalContext = Planner.satisfyGoal(state, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(state, (), goalSet).toSeq).head)
 
-        Fabula.fabula(goalContext1).foreach((eventContext : EventContext[StateNarration, _]) => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text)
-        })
-
-        Fabula.fabula(goalContext2).foreach((eventContext : EventContext[StateNarration, _]) => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text)
-        })
-
-        Fabula.fabula(goalContext3).foreach((eventContext : EventContext[StateNarration, _]) => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text)
-        })
-
-        Fabula.fabula(goalContext4).foreach((eventContext : EventContext[StateNarration, _]) => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text)
-        })
-
-        Fabula.fabula(goalContext5).foreach((eventContext : EventContext[StateNarration, _]) => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text)
-        })
-
-        Fabula.fabula(goalContext6).foreach((eventContext : EventContext[StateNarration, _]) => {
-            System.out.println(eventContext.succeeding.get.narrationMap("").text)
-        })
-
-        System.out.println(PrettyPrinter.print(goalContext1))
-        System.out.println(PrettyPrinter.print(goalContext2))
-        System.out.println(PrettyPrinter.print(goalContext3))
-        System.out.println(PrettyPrinter.print(goalContext4))
-        System.out.println(PrettyPrinter.print(goalContext5))
-        System.out.println(PrettyPrinter.print(goalContext6))
-
+        for(i <- 1 to 100) {
+            System.out.println("")
+            Fabula.fabula(goalContext).foreach((eventContext : EventContext[StateNarration, _]) => {
+                System.out.println(eventContext.succeeding.get.narrationMap("").text)
+            })
+            goalContext = Planner.satisfyGoal(goalContext.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext.succeeding().get, (), goalSet).toSeq).head)
+        }
    }
 }

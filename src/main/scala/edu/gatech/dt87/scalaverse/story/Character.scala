@@ -27,13 +27,13 @@ object Character {
 
 object Predicate {
 
-    def distinct = (a: Character, b: Character) => a != b
+    def distinct = (a: Character, b: Character) => a.first != b.first
 
     def alive = (a: Character) => a.life == ALIVE
 
     def dead = (a: Character) => a.life == DEAD
 
-    def attractive = (a: Character, b: Character) => distinct(a, b) && alive(b) && a.orientation.contains(b.gender)
+    def attractive = (a: Character, b: Character) => distinct(a, b) && a.orientation.contains(b.gender)
 
     def compatible = (a: Character, b: Character) => attractive(a, b) && attractive(b, a)
 

@@ -10,7 +10,7 @@ import edu.gatech.dt87.scalaverse.planner.Goal
  * @tparam S the state type
  * @tparam T the parameter type
  */
-case class GoalContext[S, T](goal: Goal[S, T], strategyContextSequence: StrategyContext[S, T]*) {
+case class GoalContext[S, T](goal: Goal[S, T], parameter : T, strategyContextSequence: StrategyContext[S, T]*) {
     /**
      * Construct a GoalContext from this GoalContext and the given StrategyContext.
      *
@@ -18,7 +18,7 @@ case class GoalContext[S, T](goal: Goal[S, T], strategyContextSequence: Strategy
      * @return the constructed GoalContext.
      */
     def append(strategyContext: StrategyContext[S, T]): GoalContext[S, T] = {
-        new GoalContext[S, T](goal, strategyContext +: strategyContextSequence: _*)
+        new GoalContext[S, T](goal, parameter, strategyContext +: strategyContextSequence: _*)
     }
 
     /**

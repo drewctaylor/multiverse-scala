@@ -33,7 +33,7 @@ object Planner {
      * @return the description of the effort of the planner to satisfy the goal
      */
     def satisfyGoal[S, T](state: S, parameter: T, goal: Goal[S, T]): GoalContext[S, T] = {
-        scala.util.Random.shuffle(goal.strategies.toSeq).foldLeft[GoalContext[S, T]](GoalContext[S, T](goal))((goalContext, strategy) => {
+        scala.util.Random.shuffle(goal.strategySet.toSeq).foldLeft[GoalContext[S, T]](GoalContext[S, T](goal, parameter))((goalContext, strategy) => {
             goalContext.succeeding() match {
                 case Some(_) => goalContext
                 case None => goalContext.append(satisfyStrategy(state, parameter, strategy))
@@ -53,7 +53,7 @@ object Planner {
      */
 
     def satisfyStrategy[S, T](state: S, parameter: T, strategy: Strategy[S, T]): StrategyContext[S, T] = {
-        strategy.steps.tail.foldLeft[StrategyContext[S, T]](StrategyContext[S, T](strategy, satisfyStrategyStep(state, parameter, strategy.steps.head)))((strategyContext, strategyStep) => {
+        strategy.stepSequence.tail.foldLeft[StrategyContext[S, T]](StrategyContext[S, T](strategy, parameter, satisfyStrategyStep(state, parameter, strategy.stepSequence.head)))((strategyContext, strategyStep) => {
             strategyContext.succeeding() match {
                 case Some(succeeding) => strategyContext.append(satisfyStrategyStep(succeeding, parameter, strategyStep))
                 case None => strategyContext
@@ -106,6 +106,6 @@ object Planner {
      * @return a description of the effort of the planner to satisfy the subgoal
      */
     def satisfySubgoal[S, T1, T2](state: S, parameter: T1, subgoal: Subgoal[S, T1, T2]): SubgoalContext[S, T1, T2] = {
-        SubgoalContext[S, T1, T2](subgoal, satisfyGoal[S, T2](state, subgoal.f(state, parameter), subgoal.goal))
+        SubgoalContext[S, T1, T2](subgoal, satisfyGoal[S, T2](state, subgoal.transition(state, parameter), subgoal.goal))
     }
 }

@@ -11,16 +11,13 @@ sealed trait StrategyStep[S, T]
 /**
  * A Subgoal is a goal and a transformation between parameter types
  *
- * @param f transformation between parameter types.
+ * @param transition transformation between parameter types.
  * @param goal the goal.
  * @tparam S the state type.
  * @tparam T1 the external parameter type.
  * @tparam T2 the internal parameter type.
  */
-case class Subgoal[S, T1, T2](f: (S, T1) => T2, goal: Goal[S, T2]) extends StrategyStep[S, T1]
-//object Subgoal {
-//  def apply[S,T](name: String, strategies: Set[Strategy[S, T]]): Subgoal[S,T,T] = new Subgoal(_._2, Goal(name, strategies: _*))
-//}
+case class Subgoal[S, T1, T2](transition: (S, T1) => T2, goal: Goal[S, T2]) extends StrategyStep[S, T1]
 
 /**
  * An Event is an attempted state change.
