@@ -1,11 +1,14 @@
-package edu.gatech.dt87.scalaverse.planner
+package edu.gatech.dt87.scalaverse.planner.context
+
+import edu.gatech.dt87.scalaverse.planner.Event
+import edu.gatech.dt87.scalaverse.planner.Subgoal
 
 /**
- * A StepContext is either an EventContext or a SubgoalContext.
+ * A StrategyStepContext is either an EventContext or a SubgoalContext.
  *
  * @tparam S the state type
  */
-sealed trait StepContext[S] {
+sealed trait StrategyStepContext[S] {
     /**
      * The state succeeding the Event of the EventContext or the Subgoal of the SubgoalContext.
      */
@@ -20,7 +23,7 @@ sealed trait StepContext[S] {
  * @tparam S the state type
  * @tparam T the parameter type
  */
-case class EventContext[S, T](event: Event[S, T], succeeding: Option[S]) extends StepContext[S]
+case class EventContext[S, T](event: Event[S, T], succeeding: Option[S]) extends StrategyStepContext[S]
 
 /**
  * An SubgoalContext is a Sugboal and a GoalContext.
@@ -31,7 +34,7 @@ case class EventContext[S, T](event: Event[S, T], succeeding: Option[S]) extends
  * @tparam T1 the external parameter type
  * @tparam T2 the internal parameter type
  */
-case class SubgoalContext[S, T1, T2](subgoal: Subgoal[S, T1, T2], goalContext: GoalContext[S, T2]) extends StepContext[S] {
+case class SubgoalContext[S, T1, T2](subgoal: Subgoal[S, T1, T2], goalContext: GoalContext[S, T2]) extends StrategyStepContext[S] {
     def succeeding() : Option[S] = {
         goalContext.succeeding()
     }

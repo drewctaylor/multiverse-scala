@@ -1,6 +1,7 @@
 package edu.gatech.dt87.scalaverse
 
 import edu.gatech.dt87.scalaverse.planner._
+import edu.gatech.dt87.scalaverse.planner.context.EventContext
 import edu.gatech.dt87.scalaverse.predicate.Predicate._
 import edu.gatech.dt87.scalaverse.prettyPrinter._
 import edu.gatech.dt87.scalaverse.story.Predicate._
@@ -130,12 +131,12 @@ object Main {
             System.out.println(eventContext.succeeding.get.narrationMap("").text)
         })
 
-        System.out.println(PrettyPrinter.print(goalContext1));
-        System.out.println(PrettyPrinter.print(goalContext2));
-        System.out.println(PrettyPrinter.print(goalContext3));
-        System.out.println(PrettyPrinter.print(goalContext4));
-        System.out.println(PrettyPrinter.print(goalContext5));
-        System.out.println(PrettyPrinter.print(goalContext6));
+        System.out.println(PrettyPrinter.print(goalContext1))
+        System.out.println(PrettyPrinter.print(goalContext2))
+        System.out.println(PrettyPrinter.print(goalContext3))
+        System.out.println(PrettyPrinter.print(goalContext4))
+        System.out.println(PrettyPrinter.print(goalContext5))
+        System.out.println(PrettyPrinter.print(goalContext6))
 
    }
 }

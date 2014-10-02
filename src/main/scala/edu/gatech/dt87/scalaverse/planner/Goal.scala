@@ -4,7 +4,7 @@ package edu.gatech.dt87.scalaverse.planner
  * A Goal is a set of Strategies, any one of which may satisfy the Goal.
  *
  * @param name the name of the Goal
- * @param strategies the set of Strategy's, any one of which may satisfy the Goal
+ * @param strategies the set of Strategies, any one of which may satisfy the Goal
  * @tparam S the state type
  * @tparam T the parameter type
  */
@@ -17,7 +17,7 @@ object Goal {
      * A Goal factory.
      *
      * @param name the name of the Goal.
-     * @param strategies the set of Strategy's, any one of which may satisfy the Goal.
+     * @param strategies the set of Strategies, any one of which may satisfy the Goal.
      * @tparam S the state type.
      * @return the Goal.
      */
@@ -28,7 +28,7 @@ object Goal {
     /**
      * A Goal factory; the system chooses the name of the Goal.
      *
-     * @param strategies the set of Strategy's, any one of which may satisfy the Goal
+     * @param strategies the set of Strategies, any one of which may satisfy the Goal
      * @tparam S the state type
      * @return the Goal
      */

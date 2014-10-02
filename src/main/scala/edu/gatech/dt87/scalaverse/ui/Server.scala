@@ -1,6 +1,7 @@
 package edu.gatech.dt87.scalaverse.ui
 
-import edu.gatech.dt87.scalaverse.planner.{EventContext, Goal, Planner}
+import edu.gatech.dt87.scalaverse.planner.context.EventContext
+import edu.gatech.dt87.scalaverse.planner.{Goal, Planner}
 import edu.gatech.dt87.scalaverse.prettyPrinter.PrettyPrinter
 import edu.gatech.dt87.scalaverse.story.{Fabula, StateNarration}
 import edu.gatech.dt87.scalaverse.planner._

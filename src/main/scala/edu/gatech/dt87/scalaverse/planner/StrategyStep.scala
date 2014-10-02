@@ -18,9 +18,9 @@ sealed trait StrategyStep[S, T]
  * @tparam T2 the internal parameter type.
  */
 case class Subgoal[S, T1, T2](f: (S, T1) => T2, goal: Goal[S, T2]) extends StrategyStep[S, T1]
-object Subgoal {
-  def apply[S,T](name: String, strategies: Set[Strategy[S, T]]): Subgoal[S,T,T] = new Subgoal(_._2, Goal(name, strategies: _*))
-}
+//object Subgoal {
+//  def apply[S,T](name: String, strategies: Set[Strategy[S, T]]): Subgoal[S,T,T] = new Subgoal(_._2, Goal(name, strategies: _*))
+//}
 
 /**
  * An Event is an attempted state change.
