@@ -1,24 +1,23 @@
 package edu.gatech.dt87.scalaverse.story
 
 import edu.gatech.dt87.scalaverse.planner._
-import edu.gatech.dt87.scalaverse.planner.context.{SubgoalContext, EventContext, StrategyContext, GoalContext}
 
 /**
- * Created by drewtaylor on 10/1/14.
- */
+* Created by drewtaylor on 10/1/14.
+*/
 object Fabula {
 
-    def fabula[S, T](goalContext : GoalContext[S, T]) : Seq[EventContext[S, _]] = {
-        goalContext.strategyContextSequence.headOption match {
-            case Some(actionContext) => fabula(actionContext)
+    def fabula[S, X, Y](goalExecution : GoalExecution[S, X, Y]) : Seq[EventExecution[S, _, _]] = {
+        goalExecution.strategyExecutionSequence.headOption match {
+            case Some(strategyExecution) => fabula(strategyExecution)
             case None => Seq()
         }
     }
 
-    def fabula[S, T1, T2](actionContext : StrategyContext[S, T1]) : Seq[EventContext[S, _]] = {
-        actionContext.strategyStepContextSequence.flatMap {
-            case eventContext: EventContext[S, T1] => Seq(eventContext)
-            case subgoalContext: SubgoalContext[S, T1, T2] => fabula(subgoalContext.goalContext)
+    def fabula[S, X, X1, Y1, Y](strategyExecution : StrategyExecution[S, X, Y]) : Seq[EventExecution[S, _, _]] = {
+        strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence.flatMap {
+            case eventContext: EventExecution[S, X, Y] => Seq(eventContext)
+            case subgoalContext: SubgoalExecution[S, X, X1, Y1, Y] => fabula(subgoalContext.goalExecution)
         }
     }
 }

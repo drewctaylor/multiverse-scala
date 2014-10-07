@@ -1,5 +1,7 @@
 package edu.gatech.dt87.scalaverse.predicate
 
+import edu.gatech.dt87.scalaverse.random.Random
+
 object Predicate {
 
     def forAll[A, S](generatorA: (S) => List[A],
@@ -79,14 +81,14 @@ object Predicate {
 
     def thereExists[A, S](generatorA: (S) => List[A],
                           predicate: (A) => Boolean): (S) => Option[A] = {
-        (state) => scala.util.Random.shuffle(generatorA(state)).find(predicate)
+        (state) => Random.shuffle(generatorA(state)).find(predicate)
     }
 
     def thereExists[A, B, S](generatorA: (S) => List[A],
                              generatorB: (S) => List[B],
                              predicate: (A, B) => Boolean): (S) => Option[(A, B)] = {
         (state) =>
-            scala.util.Random.shuffle(for {
+            Random.shuffle(for {
                 a <- generatorA(state)
                 b <- generatorB(state)
             } yield (a, b)).find(predicate.tupled)
@@ -98,7 +100,7 @@ object Predicate {
                                 generatorC: (S) => List[C],
                                 predicate: (A, B, C) => Boolean): (S) => Option[(A, B, C)] = {
         (state) =>
-            scala.util.Random.shuffle(for {
+            Random.shuffle(for {
                 a <- generatorA(state)
                 b <- generatorB(state)
                 c <- generatorC(state)
@@ -111,7 +113,7 @@ object Predicate {
                                    generatorD: (S) => List[D],
                                    predicate: (A, B, C, D) => Boolean): (S) => Option[(A, B, C, D)] = {
         (state) =>
-            scala.util.Random.shuffle(for {
+            Random.shuffle(for {
                 a <- generatorA(state)
                 b <- generatorB(state)
                 c <- generatorC(state)
@@ -126,7 +128,7 @@ object Predicate {
                                       generatorE: (S) => List[E],
                                       predicate: (A, B, C, D, E) => Boolean): (S) => Option[(A, B, C, D, E)] = {
         (state) =>
-            scala.util.Random.shuffle(for {
+            Random.shuffle(for {
                 a <- generatorA(state)
                 b <- generatorB(state)
                 c <- generatorC(state)
@@ -144,7 +146,7 @@ object Predicate {
                                       generatorF: (S) => List[F],
                                       predicate: (A, B, C, D, E, F) => Boolean): (S) => Option[(A, B, C, D, E, F)] = {
         (state) =>
-            scala.util.Random.shuffle(for {
+            Random.shuffle(for {
                 a <- generatorA(state)
                 b <- generatorB(state)
                 c <- generatorC(state)
@@ -162,7 +164,7 @@ object Predicate {
                  forAllList: List[(S) => Boolean] = List()) = {
 
             this(generatorA, forAllList, (state) => Some(
-                scala.util.Random.shuffle(generatorA(state)).head
+                Random.shuffle(generatorA(state)).head
             ))
         }
 
@@ -189,8 +191,8 @@ object Predicate {
                  forAllList: List[(S) => Boolean] = List()) = {
 
             this(generatorA, generatorB, forAllList, (state) => Some(
-                scala.util.Random.shuffle(generatorA(state)).head,
-                scala.util.Random.shuffle(generatorB(state)).head
+                Random.shuffle(generatorA(state)).head,
+                Random.shuffle(generatorB(state)).head
             ))
         }
 
@@ -219,9 +221,9 @@ object Predicate {
                  forAllList: List[(S) => Boolean] = List()) = {
 
             this(generatorA, generatorB, generatorC, forAllList, (state) => Some(
-                scala.util.Random.shuffle(generatorA(state)).head,
-                scala.util.Random.shuffle(generatorB(state)).head,
-                scala.util.Random.shuffle(generatorC(state)).head
+                Random.shuffle(generatorA(state)).head,
+                Random.shuffle(generatorB(state)).head,
+                Random.shuffle(generatorC(state)).head
             ))
         }
 
@@ -252,10 +254,10 @@ object Predicate {
                  forAllList: List[(S) => Boolean] = List()) = {
 
             this(generatorA, generatorB, generatorC, generatorD, forAllList, (state) => Some(
-                scala.util.Random.shuffle(generatorA(state)).head,
-                scala.util.Random.shuffle(generatorB(state)).head,
-                scala.util.Random.shuffle(generatorC(state)).head,
-                scala.util.Random.shuffle(generatorD(state)).head
+                Random.shuffle(generatorA(state)).head,
+                Random.shuffle(generatorB(state)).head,
+                Random.shuffle(generatorC(state)).head,
+                Random.shuffle(generatorD(state)).head
             ))
         }
 
@@ -288,11 +290,11 @@ object Predicate {
                  forAllList: List[(S) => Boolean] = List()) = {
 
             this(generatorA, generatorB, generatorC, generatorD, generatorE, forAllList, (state) => Some(
-                scala.util.Random.shuffle(generatorA(state)).head,
-                scala.util.Random.shuffle(generatorB(state)).head,
-                scala.util.Random.shuffle(generatorC(state)).head,
-                scala.util.Random.shuffle(generatorD(state)).head,
-                scala.util.Random.shuffle(generatorE(state)).head
+                Random.shuffle(generatorA(state)).head,
+                Random.shuffle(generatorB(state)).head,
+                Random.shuffle(generatorC(state)).head,
+                Random.shuffle(generatorD(state)).head,
+                Random.shuffle(generatorE(state)).head
             ))
         }
 
@@ -328,12 +330,12 @@ object Predicate {
                  forAllList: List[(S) => Boolean] = List()) = {
 
             this(generatorA, generatorB, generatorC, generatorD, generatorE, generatorF, forAllList, (state) => Some(
-                scala.util.Random.shuffle(generatorA(state)).head,
-                scala.util.Random.shuffle(generatorB(state)).head,
-                scala.util.Random.shuffle(generatorC(state)).head,
-                scala.util.Random.shuffle(generatorD(state)).head,
-                scala.util.Random.shuffle(generatorE(state)).head,
-                scala.util.Random.shuffle(generatorF(state)).head
+                Random.shuffle(generatorA(state)).head,
+                Random.shuffle(generatorB(state)).head,
+                Random.shuffle(generatorC(state)).head,
+                Random.shuffle(generatorD(state)).head,
+                Random.shuffle(generatorE(state)).head,
+                Random.shuffle(generatorF(state)).head
             ))
         }
 

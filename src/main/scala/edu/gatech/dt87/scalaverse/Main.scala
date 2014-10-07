@@ -1,11 +1,10 @@
 package edu.gatech.dt87.scalaverse
 
 import edu.gatech.dt87.scalaverse.planner._
-import edu.gatech.dt87.scalaverse.planner.context.EventContext
 import edu.gatech.dt87.scalaverse.predicate.Predicate._
-import edu.gatech.dt87.scalaverse.prettyPrinter._
-import edu.gatech.dt87.scalaverse.story.Predicate._
+import edu.gatech.dt87.scalaverse.random._
 import edu.gatech.dt87.scalaverse.story._
+import edu.gatech.dt87.scalaverse.story.character._
 import monocle.function._
 import monocle.std._
 import monocle.syntax._
@@ -22,89 +21,99 @@ object Main {
             Character("Peter", "Burns", MALE, Set(FEMALE), 30),
             Character("Michael", "Mancini", MALE, Set(FEMALE), 30),
             Character("Sydney", "Andrews", FEMALE, Set(MALE, FEMALE), 30),
-            Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))) , Map("" -> Narration("", "Once upon a time . . .")))
+            Character("Kimberly", "Shaw", FEMALE, Set(MALE, FEMALE), 30))), Map("" -> Narration("", "Once upon a time . . .")))
 
-        val goalLife = Goal[StateNarration, (Character)]("Life",
-            Strategy[StateNarration, (Character)]("Life - No Operation",
-                new Event[StateNarration, (Character)]("Precondition", (stateNarration, parameter) => if(parameter.life == ALIVE) Some(stateNarration) else None),
-                new Event[StateNarration, (Character)]("Narration", (stateNarration, parameter) => {
-                    Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${parameter.first} lies by the pool."))))
-                })
+        val goalLife = Goal[StateNarration, Character, Unit]("Life",
+            new Strategy[StateNarration, Character, Unit]("Life - No Operation",
+                new Event[StateNarration, Character, Character]("Precondition", (stateNarration, character) => if (character.life == ALIVE) Some(stateNarration, character) else None) merge
+                    new Event[StateNarration, Character, Unit]("Narration", (stateNarration, character) => {
+                        Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${character.first} lies by the pool."))), ())
+                    })
             ),
-            Strategy[StateNarration, (Character)]("Life - Revive",
-                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.life == DEAD) Some(stateNarration) else None),
-                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
-                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.life set ALIVE
+            new Strategy[StateNarration, Character, Unit]("Life - Revive",
+                new Event[StateNarration, Character, Character]("Precondition", (stateNarration, character) => if (character.life == DEAD) Some(stateNarration, character) else None) merge
+                    new Event[StateNarration, Character, Unit]("Narration", (stateNarration, character) => {
+                        val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.life set ALIVE
 
-                    Some(StateNarration(state1, Map("" -> Narration("", s"${character.first} returns to Melrose Place, very much alive."))))
-                })
+                        Some(StateNarration(state1, Map("" -> Narration("", s"${character.first} returns to Melrose Place, very much alive."))), ())
+                    })
             )
         )
 
-        val goalSingle = Goal[StateNarration, (Character)]("Single",
-            Strategy[StateNarration, (Character)]("Single - No Operation",
-                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse == None) Some(stateNarration) else None),
-                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
-                    Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${character.first} lies by the pool, dreaming of love."))))
-                })
+        val goalSingle = Goal[StateNarration, Character, Unit]("Single",
+            new Strategy[StateNarration, Character, Unit]("Single - No Operation",
+                new Event[StateNarration, Character, Character]("Precondition", (stateNarration, character) => if (character.spouse == None) Some(stateNarration, character) else None) merge
+                    new Event[StateNarration, Character, Unit]("Narration", (stateNarration, character) => {
+                        Some(StateNarration(stateNarration.state, Map("" -> Narration("", s"${character.first} lies by the pool, dreaming of love."))), ())
+                    })
             ),
-            Strategy[StateNarration, (Character)]("Single - By Death",
-                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse.isDefined) Some(stateNarration) else None),
-                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
-                    val spouse = character.spouse.get
-                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
-                    val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
-                    val state3 = state2 |-> State.characterSet |->> index(state2.characterSet.indexOf(spouse)) |->> Character.life set DEAD
-                    Some(StateNarration(state3, Map("" -> Narration("", s"${spouse.first} dies, leaving ${character.first} alone."))))
-                })
+            new Strategy[StateNarration, Character, Unit]("Single - By Death",
+                new Event[StateNarration, Character, Character]("Precondition", (stateNarration, character) => if (character.spouse.isDefined) Some(stateNarration, character) else None) merge
+                    new Event[StateNarration, Character, Unit]("Narration", (stateNarration, character) => {
+                        val spouse = character.spouse.get
+                        val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
+                        val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
+                        val state3 = state2 |-> State.characterSet |->> index(state2.characterSet.indexOf(spouse)) |->> Character.life set DEAD
+                        Some(StateNarration(state3, Map("" -> Narration("", s"$spouse dies, leaving ${character.first} alone."))), ())
+                    })
             ),
-            Strategy[StateNarration, (Character)]("Single - By Divorce",
-                new Event[StateNarration, (Character)]("Precondition", (stateNarration, character) => if(character.spouse.isDefined) Some(stateNarration) else None),
-                new Event[StateNarration, (Character)]("Narration", (stateNarration, character) => {
-                    val spouse = character.spouse.get
-                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
-                    val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
+            new Strategy[StateNarration, Character, Unit]("Single - By Divorce",
+                new Event[StateNarration, Character, Character]("Precondition", (stateNarration, character) => if (character.spouse.isDefined) Some(stateNarration, character) else None) merge
+                    new Event[StateNarration, Character, Unit]("Narration", (stateNarration, character) => {
+                        val spouse = character.spouse.get
+                        val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(character)) |->> Character.spouse set None
+                        val state2 = state1 |-> State.characterSet |->> index(state1.characterSet.indexOf(spouse)) |->> Character.spouse set None
 
-                    Some(StateNarration(state2, Map("" -> Narration("", s"${character.first} and ${spouse.first} divorce."))))
-                })
+                        Some(StateNarration(state2, Map("" -> Narration("", s"${character.first} and $spouse divorce."))), ())
+                    })
             )
         )
 
-        val goalMarriage = new Goal[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
-            Set(new Strategy[StateNarration, (Character, Character)]("Marriage, Given Two Characters",
-                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._1) }, goalLife),
-                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._2) }, goalLife),
-                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._1) }, goalSingle),
-                new Subgoal[StateNarration, (Character, Character), (Character)]((stateNarration, couple) => {  (couple._2) }, goalSingle),
-                new Event[StateNarration, (Character, Character)]("Narration", (stateNarration, couple) => {
-                    val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set Some(couple._2)
-                    val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set Some(couple._1)
+        def tIn1(stateNarration: StateNarration, couple: (Character, Character)): Character = couple._1
+        def tIn2(stateNarration: StateNarration, couple: (Character, Character)): Character = couple._2
+        def tOut(stateNarration: StateNarration, couple: (Character, Character), output: Unit): (Character, Character) = couple
 
-                    Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} marry."))))
-                })
+        val goalMarriage = new Goal[StateNarration, (Character, Character), Unit]("Marriage, Given Two Characters",
+            Set(new Strategy[StateNarration, (Character, Character), Unit]("Marriage, Given Two Characters",
+                Subgoal[StateNarration, (Character, Character), Character, Unit, (Character, Character)](tIn1 _, goalLife, tOut _) merge
+                    Subgoal[StateNarration, (Character, Character), Character, Unit, (Character, Character)](tIn2 _, goalLife, tOut _) merge
+                    Subgoal[StateNarration, (Character, Character), Character, Unit, (Character, Character)](tIn1 _, goalSingle, tOut _) merge
+                    Subgoal[StateNarration, (Character, Character), Character, Unit, (Character, Character)](tIn2 _, goalSingle, tOut _) merge
+                    new Event[StateNarration, (Character, Character), Unit]("Narration", (stateNarration, couple) => {
+                        val state1 = stateNarration.state |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._1)) |->> Character.spouse set Some(couple._2.id)
+                        val state2 = state1 |-> State.characterSet |->> index(stateNarration.state.characterSet.indexOf(couple._2)) |->> Character.spouse set Some(couple._1.id)
+
+                        Some(StateNarration(state2, Map("" -> Narration("", s"${couple._1.first} and ${couple._2.first} marry."))), ())
+                    })
             ))
         )
 
-        val goalMarriageTop = new Goal[StateNarration, Any]("Marriage",
-            Set(new Strategy[StateNarration, Any]("Marriage",
-                new Subgoal[StateNarration, Any, (Character, Character)]((stateNarration, any) => {
-                    given(character, character).thereExists((character1, character2) => {
-                        compatible(character1, character2) && !areMarried(character1, character2)
-                    })(stateNarration.state).get
-                }, goalMarriage))
-        ))
+        def tInP(stateNarration: StateNarration, input: Unit): (Character, Character) = given(Predicate.character, Predicate.character).thereExists((character1, character2) => {
+            Predicate.compatible(character1, character2) && !Predicate.areMarried(character1, character2)
+        })(stateNarration.state).get
+
+        def tOutP(stateNarration: StateNarration, input: Unit, output: Unit): Unit = Unit
+
+        val goalMarriageTop = new Goal[StateNarration, Unit, Unit]("Marriage",
+            Set(new Strategy[StateNarration, Unit, Unit]("Marriage",
+                Subgoal[StateNarration, Unit, (Character, Character), Unit, Unit](tInP _, goalMarriage, tOutP _)
+            )))
 
         var goalSet = Set(goalMarriageTop)
 
-        val eventSequence = Seq[EventContext[StateNarration, _]]()
-        var goalContext = Planner.satisfyGoal(state, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(state, (), goalSet).toSeq).head)
+        val eventSequence = Seq[EventExecution[StateNarration, _, _]]()
+        var goalExecution = Random.shuffle(Planner.satisfiableGoalSet(state, (), goalSet).toSeq).head.satisfy(state, ())
 
-        for(i <- 1 to 100) {
+        for (i <- 1 to 100) {
             System.out.println("")
-            Fabula.fabula(goalContext).foreach((eventContext : EventContext[StateNarration, _]) => {
-                System.out.println(eventContext.succeeding.get.narrationMap("").text)
+            Fabula.fabula(goalExecution).foreach((eventExecution: EventExecution[StateNarration, _, _]) => {
+                System.out.println(eventExecution.successor.get._1.narrationMap("").text)
             })
-            goalContext = Planner.satisfyGoal(goalContext.succeeding().get, (), scala.util.Random.shuffle(Planner.satisfiableGoalSet(goalContext.succeeding().get, (), goalSet).toSeq).head)
+            goalExecution = Random.shuffle(Planner.satisfiableGoalSet(goalExecution.successor().get._1, (), goalSet).toSeq).head.satisfy(goalExecution.successor().get._1, ())
         }
-   }
+
+        //        for(i <- 1 to 1000) {
+        //            System.out.println(Character.random())
+        //        }
+    }
 }

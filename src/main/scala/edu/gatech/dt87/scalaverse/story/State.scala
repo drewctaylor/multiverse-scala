@@ -1,5 +1,6 @@
 package edu.gatech.dt87.scalaverse.story
 
+import edu.gatech.dt87.scalaverse.story.character.Character
 import monocle.SimpleLens
 
 /**
