@@ -1,8 +1,8 @@
 package edu.gatech.dt87.scalaverse.story.character
 
-import edu.gatech.dt87.scalaverse.story.State;
+import edu.gatech.dt87.scalaverse.story.StoryState;
 
-object Predicate {
+object CharacterPredicate {
 
      def distinct = (a: Character, b: Character) => a.id != b.id
 
@@ -26,7 +26,7 @@ object Predicate {
 
      def marriageable = (a: Character, b: Character) => compatible(a, b) && single(a) && single(b)
 
-     def character = (s: State) => s.characterSet
+     def character = (s: StoryState) => s.characterSet
 
-     def characterIs = (c: (Character) => Boolean) => (s: State) => s.characterSet.filter(c)
+     def characterIs = (c: (Character) => Boolean) => (s: StoryState) => s.characterSet.filter(c)
  }

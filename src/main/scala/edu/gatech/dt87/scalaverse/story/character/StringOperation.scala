@@ -1,7 +1,7 @@
 package edu.gatech.dt87.scalaverse.story.character
 
 class StringOperation(string : String) {
-    def toGender : Gender = {
+    def toGender : CharacterGender = {
         if(string == "MALE") {
             MALE
         } else if(string == "FEMALE") {

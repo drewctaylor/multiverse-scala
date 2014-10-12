@@ -8,6 +8,8 @@ package edu.gatech.dt87.scalaverse.planner
  * @tparam Y the step output type
  */
 sealed trait StrategyStep[S, X, Y] {
+    def name() : String
+
     def satisfy(state: S, input: X): StrategyStepExecution[S, Y]
 
     /**
@@ -18,10 +20,15 @@ sealed trait StrategyStep[S, X, Y] {
      * @return
      */
     def merge[Z](second: StrategyStep[S, Y, Z]): StrategyStep[S, X, Z] = new StrategyStep[S, X, Z] {
+        def name() : String = {
+            s"${StrategyStep.this.name()} merge ${second.name()}"
+        }
+
         def satisfy(state: S, input: X): StrategyStepExecution[S, Z] = {
-            StrategyStep.this.satisfy(state, input).successor() match {
-                case None => StrategyStep.this.satisfy(state, input) merge new NoExecution()
-                case Some((successorState, output)) => StrategyStep.this.satisfy(successorState, input) merge second.satisfy(successorState, output)
+            val strategyStepExecution = StrategyStep.this.satisfy(state, input)
+            strategyStepExecution.successor() match {
+                case None => strategyStepExecution merge new NoExecution()
+                case Some((successorState, output)) => strategyStepExecution merge second.satisfy(successorState, output)
             }
         }
     }

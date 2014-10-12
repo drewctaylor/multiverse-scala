@@ -9,15 +9,9 @@ import edu.gatech.dt87.scalaverse.random.Random
 import edu.gatech.dt87.scalaverse.story.character.StringOperation._
 import monocle.Lenser
 
-case class Character(
-                        id: Int,
-                        first: String,
-                        last: String,
-                        gender: Gender,
-                        orientation: Set[Gender],
-                        age: Int,
+case class Character(id: Int, first: String, last: String, gender: CharacterGender, orientation: Set[CharacterGender], age: Int,
                         spouse: Option[Int],
-                        life: Life) {
+                        life: CharacterLife) {
 
     def sub(): String = {
         gender match {
@@ -70,8 +64,8 @@ object Character {
     def apply(
                  first: String,
                  last: String,
-                 gender: Gender,
-                 orientation: Set[Gender],
+                 gender: CharacterGender,
+                 orientation: Set[CharacterGender],
                  age: Int): Character = {
         new Character(index.next(), first, last, gender, orientation, age, None, ALIVE)
     }
@@ -79,15 +73,15 @@ object Character {
     def random(
                  firstIn: Option[String] = None,
                  lastIn: Option[String] = None,
-                 genderIn: Option[Gender] = None,
-                 orientationIn: Option[Set[Gender]] = None,
+                 genderIn: Option[CharacterGender] = None,
+                 orientationIn: Option[Set[CharacterGender]] = None,
                  ageIn: Option[Int] = None): Character = {
 
         val gender = genderIn.getOrElse(if (Random.nextBoolean()) MALE else FEMALE)
         val age = ageIn.getOrElse(Random.nextInt(125))
         val first = firstIn.getOrElse(CharacterNameSource.nextFirst(gender, 2009 - age))
         val last = lastIn.getOrElse(CharacterNameSource.nextLast())
-        val orientation: Set[Gender] = orientationIn.getOrElse(if(Random.nextInt(10) == 1) Set(gender) else if(gender == MALE) Set(FEMALE) else Set(MALE))
+        val orientation: Set[CharacterGender] = orientationIn.getOrElse(if(Random.nextInt(10) == 1) Set(gender) else if(gender == MALE) Set(FEMALE) else Set(MALE))
 
         new Character(index.next(), first, last, gender, orientation, age, None, ALIVE)
     }
@@ -107,20 +101,20 @@ object CharacterNameSource {
     val firstIteratorFor = prepareFirst("first.csv")
     val lastIterator = prepareLast("last.csv")
 
-    def prepareFirst(file: String): Map[(Gender, Int), Iterator[String]] = {
+    def prepareFirst(file: String): Map[(CharacterGender, Int), Iterator[String]] = {
         io.Source.fromInputStream(getClass.getResourceAsStream(file)).getLines()
             .map(line => line.split(","))
             .map(array => (array(0).toGender, array(1).toInt, array(2)))
-            .foldLeft(Map[(Gender, Int), Seq[String]]())((map, record) => map.updated((record._1, record._2), map.getOrElse((record._1, record._2), Seq[String]()) :+ record._3: Seq[String]))
+            .foldLeft(Map[(CharacterGender, Int), Seq[String]]())((map, record) => map.updated((record._1, record._2), map.getOrElse((record._1, record._2), Seq[String]()) :+ record._3: Seq[String]))
             .map(entry => entry)
-            .foldLeft(Map[(Gender, Int), Iterator[String]]())((map, entry) => map + (entry._1 -> entry._2.toIterator))
+            .foldLeft(Map[(CharacterGender, Int), Iterator[String]]())((map, entry) => map + (entry._1 -> entry._2.toIterator))
     }
 
     def prepareLast(file: String): Iterator[String] = {
         Random.shuffle(io.Source.fromInputStream(getClass.getResourceAsStream(file)).getLines()).toIterator
     }
 
-    def nextFirst(gender: Gender, year: Int): String = {
+    def nextFirst(gender: CharacterGender, year: Int): String = {
         val firstIterator = firstIteratorFor.getOrElse((gender, year / 10 * 10), throw new RuntimeException("The system has no iterator for the given year."))
 
         if (firstIterator.hasNext) {

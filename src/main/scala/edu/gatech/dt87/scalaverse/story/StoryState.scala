@@ -8,9 +8,9 @@ import monocle.SimpleLens
  *
  * @param characterSet a set of Characters
  */
-case class State(characterSet: List[Character]) {
+case class StoryState(characterSet: List[Character]) {
 }
 
-object State {
-    val characterSet = SimpleLens[State](_.characterSet)((state, v) => state.copy(characterSet = v))
+object StoryState {
+    val characterSetLens = SimpleLens[StoryState](_.characterSet)((state, v) => state.copy(characterSet = v))
 }

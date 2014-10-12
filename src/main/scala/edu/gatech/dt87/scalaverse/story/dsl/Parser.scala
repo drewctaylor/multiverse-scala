@@ -1,4 +1,4 @@
-package edu.gatech.dt87.scalaverse.dsl
+package edu.gatech.dt87.scalaverse.story.dsl
 
 import scala.util.parsing.combinator.RegexParsers
 
