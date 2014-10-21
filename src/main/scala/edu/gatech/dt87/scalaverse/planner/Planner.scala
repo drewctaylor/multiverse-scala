@@ -1,7 +1,5 @@
 package edu.gatech.dt87.scalaverse.planner
 
-import edu.gatech.dt87.scalaverse.random.Random
-
 object Planner {
     /**
      * Given a state, an goal input, and a set of goals, return the goals that the planner can satisfy.

@@ -23,6 +23,9 @@ case class Strategy[S, X, Y](name: String, strategyStepSequence: StrategyStep[S,
     }
 }
 
+/**
+ * A strategy factory.
+ */
 object Strategy {
     val index = Iterator.from(0)
 

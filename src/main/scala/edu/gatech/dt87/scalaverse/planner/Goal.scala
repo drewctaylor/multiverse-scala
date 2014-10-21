@@ -2,6 +2,12 @@ package edu.gatech.dt87.scalaverse.planner
 
 import edu.gatech.dt87.scalaverse.random.Random
 
+trait Goal[S, X, Y] {
+    def name : String
+    def strategySet : Set[Strategy[S, X, Y]]
+    def satisfy(state : S, input : X) : GoalExecution[S, X, Y]
+}
+
 /**
  * A goal is a set of strategies, any one of which may achieve the goal.
  *
@@ -11,7 +17,7 @@ import edu.gatech.dt87.scalaverse.random.Random
  * @tparam X the goal input type
  * @tparam Y the goal output type
  */
-case class Goal[S, X, Y](name: String, strategySet: Set[Strategy[S, X, Y]]) {
+case class GoalImplementation[S, X, Y](name: String, strategySet: Set[Strategy[S, X, Y]]) extends Goal[S, X, Y] {
     /**
      * Given a state and a goal input, return a description of the effort of the planner to achieve that goal.
      *
@@ -29,6 +35,9 @@ case class Goal[S, X, Y](name: String, strategySet: Set[Strategy[S, X, Y]]) {
     }
 }
 
+/**
+ * A goal factory.
+ */
 object Goal {
     val iterator = Iterator.from(0)
 
@@ -36,27 +45,27 @@ object Goal {
      * A goal factory.
      *
      * @param name the name of the goal
-     * @param strategySet the set of strategies, any one of which may satisfy the goal
+     * @param strategySequence the set of strategies, any one of which may satisfy the goal
      * @tparam S the state type
      * @tparam X the goal input type
      * @tparam Y the goal output type
      * @return the goal
      */
-    def apply[S, X, Y](name: String, strategySet: Strategy[S, X, Y]*): Goal[S, X, Y] = {
-        Goal[S, X, Y](name, strategySet.toSet)
+    def apply[S, X, Y](name: String, strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
+        GoalImplementation[S, X, Y](name, strategySequence.toSet)
     }
 
     /**
      * A goal factory; the system chooses the name of the goal.
      *
-     * @param strategySet the set of strategies, any one of which may satisfy the goal
+     * @param strategySequence the set of strategies, any one of which may satisfy the goal
      * @tparam S the state type
      * @tparam X the goal input type
      * @tparam Y the goal output type
      * @return the goal
      */
-    def apply[S, X, Y](strategySet: Strategy[S, X, Y]*): Goal[S, X, Y] = {
-        Goal[S, X, Y](s"Unnamed Goal ${iterator.next()}", strategySet.toSet)
+    def apply[S, X, Y](strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
+        GoalImplementation[S, X, Y](s"Unnamed Goal ${iterator.next()}", strategySequence.toSet)
     }
 }
 
