@@ -1,9 +1,8 @@
 package edu.gatech.dt87.scalaverse.story.character
 
-import edu.gatech.dt87.scalaverse.story.StoryState
 import monocle.Lenser
 
-case class Character(id : Int, attributeValueMap : Map[String, Set[String]])
+case class Character(attributeValueMap: Map[Symbol, Set[Symbol]] = Map())
 
 object Character {
     val focusFactory = Lenser[Character]
