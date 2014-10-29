@@ -1,676 +1,263 @@
 package edu.gatech.dt87.scalaverse.story.dsl
 
-import edu.gatech.dt87.scalaverse.planner.Goal
-import edu.gatech.dt87.scalaverse.story.attribute._
-import edu.gatech.dt87.scalaverse.story.character.{Character, CharacterBidirectionalRelationship, CharacterUnidirectionalRelationship}
-import edu.gatech.dt87.scalaverse.story.{StoryState, StoryStrategyStep}
-import monocle.function._
-import monocle.std._
-import monocle.syntax._
+import scala.util.parsing.combinator.{PackratParsers, RegexParsers}
 
-import scala.collection.mutable
-import scala.util.parsing.combinator.RegexParsers
+class Parser extends RegexParsers with PackratParsers {
 
-class Parser extends RegexParsers {
-
-    sealed trait RelationshipDeclaration {
-        def entityLeft: Symbol
-
-        def entityRight: Symbol
-
-        def modifyStatementList: List[ModifyStatement]
+    lazy val declarationState = "state" ~ blockState ^^ {
+        case s ~ b => DeclarationState(b)
     }
 
-    case class RelationshipBidirectionalDeclaration(entityLeft: Symbol, entityRight: Symbol, modifyStatementList: List[ModifyStatement]) extends RelationshipDeclaration
+    lazy val declarationAttribute : PackratParser[DeclarationAttribute] = declarationOneSymbol | declarationOneUnordered | declarationOneOrdered | declarationSubsetSymbol | declarationSubsetUnordered | declarationSubsetOrdered
 
-    case class RelationshipUnidirectionalDeclaration(entityLeft: Symbol, entityRight: Symbol, modifyStatementList: List[ModifyStatement]) extends RelationshipDeclaration
-
-    sealed trait ModifyStatement {
-        def field: FieldSpecification
-
-        def value: ValueSpecification
+    lazy val declarationOneSymbol :PackratParser[DeclarationAttribute] = "attribute" ~ identifier ~ "symbol" ^^ {
+        case a ~ i ~ s1 => DeclarationAttributeOneSymbol(i)
     }
 
-    case class UpdateStatement(field: FieldSpecification, value: ValueSpecification) extends ModifyStatement
-
-    case class InsertStatement(field: FieldSpecification, value: ValueSpecification) extends ModifyStatement
-
-    case class RemoveStatement(field: FieldSpecification, value: ValueSpecification) extends ModifyStatement
-
-    sealed trait ValueSpecification {
-        def valueCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]]
-
-        def valueBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]]
-
-        def valueUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]]
+    lazy val declarationOneUnordered  :PackratParser[DeclarationAttribute]= "attribute" ~ identifier ~ "one" ~ "of" ~ "unordered" ~ "set" ~ blockLiteral ^^ {
+        case a ~ i ~ s1 ~ s2 ~ s3 ~ s4 ~ b => DeclarationAttributeOneUnordered(i, b)
     }
 
-    case class ValueSpecification0(symbol: Symbol) extends ValueSpecification {
-        def valueCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            Some(Some(Set(symbol)))
-        }
-
-        def valueBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            Some(Some(Set(symbol)))
-        }
-
-        def valueUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            Some(Some(Set(symbol)))
-        }
+    lazy val declarationOneOrdered :PackratParser[DeclarationAttribute] = "attribute" ~ identifier ~ "one" ~ "of" ~ "ordered" ~ "set" ~ blockLiteral ^^ {
+        case a ~ i ~ s1 ~ s2 ~ s3 ~ s4 ~ b => DeclarationAttributeOneOrdered(i, b)
     }
 
-
-    case class ValueSpecification1(attribute: Symbol) extends ValueSpecification {
-        def valueCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            storyState.applyLens(StoryState.focusCharacterMap)
-                .composeTraversal(index(that))
-                .composeTraversal(Character.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .headOption
-        }
-
-        def valueBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            storyState.applyLens(StoryState.focusRelationshipBidirectionalMap)
-                .composeTraversal(index(that))
-                .composeTraversal(CharacterBidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .headOption
-        }
-
-        def valueUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            storyState.applyLens(StoryState.focusRelationshipUnidirectionalMap)
-                .composeTraversal(index(that))
-                .composeTraversal(CharacterUnidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .headOption
-        }
+    lazy val declarationSubsetSymbol :PackratParser[DeclarationAttribute] = "attribute" ~ identifier ~ "set" ~ "of" ~ "symbols" ^^ {
+        case a ~ i ~ s1 ~ s2 ~ s3 => DeclarationAttributeSubsetSymbol(i)
     }
 
-    case class ValueSpecification2(entity: Symbol, attribute: Symbol) extends ValueSpecification {
-        def valueCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            storyState.applyLens(StoryState.focusCharacterMap)
-                .composeTraversal(index(storyData(entity)))
-                .composeTraversal(Character.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .headOption
-        }
-
-        def valueBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            throw new RuntimeException()
-        }
-
-        def valueUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            throw new RuntimeException()
-        }
+    lazy val declarationSubsetUnordered :PackratParser[DeclarationAttribute] = "attribute" ~ identifier ~ "subset" ~ "of" ~ "unordered" ~ "set" ~ blockLiteral ^^ {
+        case a ~ i ~ s1 ~ s2 ~ s3 ~ s4 ~ b => DeclarationAttributeSubsetUnordered(i, b)
     }
 
-    case class ValueSpecification3(entityLeft: Symbol, entityRight: Symbol, attribute: Symbol) extends ValueSpecification {
-        def valueCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            storyState.applyLens(StoryState.focusRelationshipBidirectionalMap)
-                .composeTraversal(index((storyData(entityLeft), storyData(entityRight))))
-                .composeTraversal(CharacterBidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .headOption
-        }
-
-        def valueBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            throw new RuntimeException()
-        }
-
-        def valueUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            throw new RuntimeException()
-        }
+    lazy val declarationSubsetOrdered :PackratParser[DeclarationAttribute] = "attribute" ~ identifier ~ "subset" ~ "of" ~ "ordered" ~ "set" ~ blockLiteral ^^ {
+        case a ~ i ~ s1 ~ s2 ~ s3 ~ s4 ~ b => DeclarationAttributeSubsetOrdered(i, b)
     }
 
-
-    case class ValueSpecification4(entityLeft: Symbol, entityRight: Symbol, attribute: Symbol) extends ValueSpecification {
-        def valueCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            storyState.applyLens(StoryState.focusRelationshipUnidirectionalMap)
-                .composeTraversal(index((storyData(entityLeft), storyData(entityRight))))
-                .composeTraversal(CharacterUnidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .headOption
-        }
-
-        def valueBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            throw new RuntimeException()
-        }
-
-        def valueUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int]): Option[Option[Set[Symbol]]] = {
-            throw new RuntimeException()
-        }
+    lazy val declarationRelationship: PackratParser[DeclarationRelationship] = "relationship" ~ expressionRelationship ~ blockAssignment ^^ {
+        case c ~ i ~ b => DeclarationRelationship(i, b)
     }
 
-    sealed trait FieldSpecification {
-        def modifyCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState
-
-        def modifyBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState
-
-        def modifyUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState
+    lazy val declarationSetting: PackratParser[DeclarationSetting] = "setting" ~ expressionEntity ~ blockAssignment ^^ {
+        case c ~ i ~ b => DeclarationSetting(i, b)
     }
 
-    case class FieldSpecification1(attribute: Symbol) extends FieldSpecification {
-
-        def modifyCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            storyState.applyLens(StoryState.focusCharacterMap)
-                .composeTraversal(index(that))
-                .composeTraversal(Character.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .modify(f)
-        }
-
-        def modifyBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            storyState.applyLens(StoryState.focusRelationshipBidirectionalMap)
-                .composeTraversal(index(that))
-                .composeTraversal(CharacterBidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .modify(f)
-        }
-
-        def modifyUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            storyState.applyLens(StoryState.focusRelationshipUnidirectionalMap)
-                .composeTraversal(index(that))
-                .composeTraversal(CharacterUnidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .modify(f)
-        }
+    lazy val declarationCharacter: PackratParser[DeclarationCharacter] = "character" ~ expressionEntity ~ blockAssignment ^^ {
+        case c ~ i ~ b => DeclarationCharacter(i, b)
     }
 
-    case class FieldSpecification2(entity: Symbol, attribute: Symbol) extends FieldSpecification {
-
-        def modifyCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            storyState.applyLens(StoryState.focusCharacterMap)
-                .composeTraversal(index(that))
-                .composeTraversal(Character.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .modify(f)
-        }
-
-        def modifyBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            throw new RuntimeException()
-        }
-
-        def modifyUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            throw new RuntimeException()
-        }
+    lazy val blockState: PackratParser[BlockState] = "{" ~ rep(declarationAttribute) ~ rep(declarationCharacter) ~ rep(declarationRelationship) ~ "}" ^^ {
+        case bl ~ a ~ c ~ r ~ br => BlockState(a, c, r)
     }
 
-    case class FieldSpecification3(entityLeft: Symbol, entityRight: Symbol, attribute: Symbol) extends FieldSpecification {
-
-        def modifyCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            storyState.applyLens(StoryState.focusRelationshipBidirectionalMap)
-                .composeTraversal(index((storyData(entityLeft), storyData(entityRight))))
-                .composeTraversal(CharacterBidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .modify(f)
-        }
-
-        def modifyBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            throw new RuntimeException()
-        }
-
-        def modifyUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            throw new RuntimeException()
-        }
+    lazy val blockLiteral: PackratParser[BlockLiteral] = "{" ~ rep(expressionLiteral) ~ "}" ^^ {
+        case bl ~ el ~ br => BlockLiteral(el)
     }
 
-    case class FieldSpecification4(entityLeft: Symbol, entityRight: Symbol, attribute: Symbol) extends FieldSpecification {
-
-        def modifyCharacter(storyState: StoryState, that: Int, storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            storyState.applyLens(StoryState.focusRelationshipUnidirectionalMap)
-                .composeTraversal(index((storyData(entityLeft), storyData(entityRight))))
-                .composeTraversal(CharacterUnidirectionalRelationship.focusAttributeValueMap)
-                .composeTraversal(at(attribute))
-                .modify(f)
-        }
-
-        def modifyBidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            throw new RuntimeException()
-        }
-
-        def modifyUnidirectionalRelationship(storyState: StoryState, that: (Int, Int), storyData: mutable.Map[Symbol, Int], f: Option[Set[Symbol]] => Option[Set[Symbol]]): StoryState = {
-            throw new RuntimeException()
-        }
+    lazy val blockAssignment: PackratParser[BlockAssignment] = "{" ~ rep(expressionAssignment) ~ "}" ^^ {
+        case bl ~ el ~ br => BlockAssignment(el)
     }
 
-    val characterIndex = Iterator.from(0)
+    lazy val expression: PackratParser[Expression] = expressionAssignment
 
-    val goalMap = scala.collection.mutable.Map[String, Goal[StoryState, StoryStrategyStep.StoryData, StoryStrategyStep.StoryData]]()
-
-    val nameDoubleQuote = """"[\p{Alnum}\p{Punct} &&[^"]]*"""".r
-
-    def template = """"[\p{Alnum}\p{Punct} &&[^"]]*"""".r
-
-    //    def endStatement = ";"
-    //
-    //    def goalKeyword = "goal" | "g"
-    //
-    //    def goalDeclaration = goalDeclarationWithoutIdentifier | goalDeclarationWithIdentifier
-    //
-    //    def goalDeclarationWithoutIdentifier = goalKeyword ~ opt(nameDoubleQuote) ~ beginBlock ~ rep1(strategyDeclaration) ~ endBlock ^^ {
-    //        case keyword ~ name ~ begin ~ strategyDeclarationList ~ end => name match {
-    //            case None => Goal(strategyDeclarationList.toSeq: _*)
-    //            case Some(_) => Goal(strategyDeclarationList.toSeq: _*)
-    //        }
-    //    }
-    //
-    //    def goalDeclarationWithIdentifier = goalKeyword ~ identifier ~ opt(nameDoubleQuote) ~ beginBlock ~ rep1(strategyDeclaration) ~ endBlock ^^ {
-    //        case keyword ~ g ~ name ~ begin ~ strategyDeclarationList ~ end => name match {
-    //            case None => Goal(strategyDeclarationList.toSeq: _*)
-    //            case Some(n) => {
-    //                val goal = Goal(n, strategyDeclarationList.toSeq: _*)
-    //                goalMap.update(g, goal)
-    //                goalMap(g)
-    //            }
-    //        }
-    //    }
-    //
-    //    def strategyKeyword = "strategy" | "s"
-    //
-    //    def strategyDeclaration = strategyKeyword ~ rep(identifier) ~ opt(nameDoubleQuote) ~ beginBlock ~ rep1(eventStatement) ~ endBlock ^^ {
-    //        case strategy ~ identifierList ~ name ~ begin ~ eventList ~ end => name match {
-    //            case None => Strategy((StoryStrategyStep.formal(identifierList) +: eventList).reduce[StrategyStep[StoryState, StoryStrategyStep.StoryData, StoryStrategyStep.StoryData]]((sss, ss) => sss merge ss))
-    //            case Some(_) => Strategy((StoryStrategyStep.formal(identifierList) +: eventList).reduce[StrategyStep[StoryState, StoryStrategyStep.StoryData, StoryStrategyStep.StoryData]]((sss, ss) => sss merge ss))
-    //        }
-    //    }
-    //
-    //    def eventStatement = (updateStatement | insertStatement | removeStatement) ^^ {
-    //        case UpdateStatement(FieldSpecification1(s), value) => null
-    //        case UpdateStatement(FieldSpecification2(e, a), value) => null
-    //        case UpdateStatement(FieldSpecification3(el, er, a), value) => null
-    //        case UpdateStatement(FieldSpecification4(el, er, a), value) => null
-    //        case InsertStatement(FieldSpecification1(s), value) => null
-    //        case InsertStatement(FieldSpecification2(e, a), value) => null
-    //        case InsertStatement(FieldSpecification3(el, er, a), value) => null
-    //        case InsertStatement(FieldSpecification4(el, er, a), value) => null
-    //        case RemoveStatement(FieldSpecification1(s), value) => null
-    //        case RemoveStatement(FieldSpecification2(e, a), value) => null
-    //        case RemoveStatement(FieldSpecification3(el, er, a), value) => null
-    //        case RemoveStatement(FieldSpecification4(el, er, a), value) => null
-    //    }
-    //
-    //        def subgoalKeyword = "subgoal"
-    //
-    //        def subgoalStatement = subgoalKeyword ~ identifier ~ rep(identifier) ~ endStatement ^^ {
-    //            case subgoal ~ n ~ parameterList ~ end => {
-    //                StoryStrategyStep.subgoal(new Goal[StoryState, StoryStrategyStep.StoryData, StoryStrategyStep.StoryData]() {
-    //                    def name: String = {
-    //                        n
-    //                    }
-    //
-    //                    def strategySet: Set[Strategy[StoryState, StoryStrategyStep.StoryData, StoryStrategyStep.StoryData]] = {
-    //                        goalMap(n).strategySet
-    //                    }
-    //
-    //                    def satisfy(state: StoryState, input: StoryStrategyStep.StoryData): GoalExecution[StoryState, StoryStrategyStep.StoryData, StoryStrategyStep.StoryData] = {
-    //                        goalMap(n).satisfy(state, input)
-    //                    }
-    //                }, parameterList)
-    //            }
-    //        }
-    //
-    //    def narrateKeyword = "narrate" | "n"
-    //
-    //    def narrateStatement = narrateKeyword ~ template ~ endStatement ^^ {
-    //        case narrate ~ t ~ end => StoryStrategyStep.narrate(t)
-    //    }
-    //
-    //    def findKeyword = "find" | "f"
-    //
-    //    def whereKeyword = "where" | "w"
-    //
-    //    def predicate = isNotPredicate | relationshipDoesNotContainPredicate | relationshipContainsPredicate | containsPredicate | isPredicate | isAttributePredicate
-    //
-    //    def isNotPredicate = identifier ~ "isnt" ~ identifier ^^ {
-    //        case entity1 ~ isnt ~ entity2 => StoryStatePredicate.isNot(entity1, entity2)
-    //    }
-    //
-    //    def isPredicate = identifier ~ "is" ~ identifier ^^ {
-    //        case entity1 ~ is ~ entity2 => StoryStatePredicate.is(entity1, entity2)
-    //    }
-    //
-    //    def isAttributePredicate = identifier ~ identifier ~ "is" ~ identifier ^^ {
-    //        case entity ~ attribute ~ is ~ symbol => StoryStatePredicate.is(entity, attribute, symbol)
-    //    }
-    //
-    //    def relationshipDoesNotContainPredicate = "relationship" ~ identifier ~ identifier ~ identifier ~ "does" ~ "not" ~ "contain" ~ identifier ^^ {
-    //        case r ~ e1 ~ e2 ~ a ~ d ~ n ~ c ~ s => StoryStatePredicate.relationshipDoesNotContain(e1, e2, a, s)
-    //    }
-    //
-    //    def containsPredicate = identifier ~ identifier ~ "contains" ~ identifier ~ identifier ^^ {
-    //        case e1 ~ a1 ~ c ~ e2 ~ a2 => StoryStatePredicate.contains(e1, a1, e2, a2)
-    //    }
-    //
-    //    def relationshipContainsPredicate = "relationship" ~ identifier ~ identifier ~ identifier ~ "contains" ~ identifier ^^ {
-    //        case relationship ~ e1 ~ e2 ~ a ~ c ~ s => StoryStatePredicate.relationshipContains(e1, e2, a, s)
-    //    }
-    //
-    //    def findStatement = findKeyword ~ identifier ~ identifier ~ whereKeyword ~ rep(predicate) ~ endStatement ^^ {
-    //        case find ~ e1 ~ e2 ~ where ~ predicateList ~ end => StoryStrategyStep.findCharacterCharacter(e1, e2, predicateList)
-    //    }
-    //
-    //    def findStatement1 = findKeyword ~ identifier ~ whereKeyword ~ rep(predicate) ~ endStatement ^^ {
-    //        case find ~ e1 ~ where ~ predicateList ~ end => StoryStrategyStep.findCharacter(e1, predicateList)
-    //    }
-    //
-    //    def noneKeyword = "none"
-    //
-    //    def noneStatement2 = noneKeyword ~ identifier ~ identifier ~ whereKeyword ~ rep(predicate) ~ endStatement ^^ {
-    //        case none ~ e1 ~ e2 ~ where ~ predicateList ~ end => StoryStrategyStep.noCharacterCharacter(e1, e2, predicateList)
-    //    }
-
-    def statementSet = stateDeclaration
-
-    val identifier = """[\p{Alnum}-]+""".r
-
-    val symbol = """"[\p{Alnum}\p{Punct} &&[^"]]*"""".r
-
-    def beginBlock = "{"
-
-    def endBlock = "}"
-
-    // state
-
-    def stateKeyword = "state" | "s"
-
-    def stateDeclaration = stateKeyword ~ beginBlock ~ rep(attributeDeclaration) ~ rep(characterDeclaration) ~ rep(relationshipUnidirectionalDeclaration | relationshipBidirectionalDeclaration) ~ endBlock ^^ {
-        case s ~ bb ~ attributeList ~ characterList ~ relationshipList ~ eb => {
-
-            def fUpsert[E](e: E): (Option[E]) => Option[E] = (oe) => oe match {
-                case Some(e) => oe
-                case None => Some(e)
-            }
-
-            val fUpdate: Option[Set[Symbol]] => Option[Set[Symbol]] => Option[Set[Symbol]] = symbolSetUpdate => {
-                symbolSet => {
-                    symbolSetUpdate
-                }
-            }
-            val fInsert: Option[Set[Symbol]] => Option[Set[Symbol]] => Option[Set[Symbol]] = symbolSetInsert => {
-                symbolSetInitial => {
-                    for (i <- symbolSetInitial.orElse(Some(Set[Symbol]()));
-                         n <- symbolSetInsert.orElse(Some(Set[Symbol]()))) yield i ++ n
-                }
-            }
-
-            val fRemove: Option[Set[Symbol]] => (Option[Set[Symbol]]) => Option[Set[Symbol]] = symbolSetRemove => {
-                symbolSetInitial => {
-                    for (i <- symbolSetInitial.orElse(Some(Set[Symbol]()));
-                         r <- symbolSetRemove.orElse(Some(Set[Symbol]()))) yield i -- r
-                }
-            }
-
-            val map = mutable.Map[Symbol, Int]()
-
-            val storyStateWithAttributeMap = attributeList.foldLeft(StoryState())((storyState, attribute) => {
-                storyState.applyLens(StoryState.focusAttributeMap).composeTraversal(at(attribute.name)).set(Some(attribute))
-            })
-
-            val storyStateWithCharacterMap = characterList.foldLeft(storyStateWithAttributeMap)((storyState, tuple: (Symbol, List[ModifyStatement with Product with Serializable])) => {
-                map += (tuple._1 -> characterIndex.next())
-
-                tuple._2.foldLeft(storyState.applyLens(StoryState.focusCharacterMap).composeTraversal(at(map(tuple._1))).modify(fUpsert(Character())))((storyState, statement) => {
-                    statement match {
-                        case UpdateStatement(field, value) => field.modifyCharacter(storyState, map(tuple._1), map, fUpdate(value.valueCharacter(storyState, map(tuple._1), map).get))
-                        case InsertStatement(field, value) => field.modifyCharacter(storyState, map(tuple._1), map, fInsert(value.valueCharacter(storyState, map(tuple._1), map).get))
-                        case RemoveStatement(field, value) => field.modifyCharacter(storyState, map(tuple._1), map, fRemove(value.valueCharacter(storyState, map(tuple._1), map).get))
-                    }
-                })
-            })
-
-            val storyStateWithRelationshipMap = relationshipList.foldLeft(storyStateWithCharacterMap)((storyState, relationshipDeclaration) => {
-                relationshipDeclaration match {
-                    case RelationshipUnidirectionalDeclaration(el, er, modifyStatementList) => {
-                        modifyStatementList.foldLeft(storyState.applyLens(StoryState.focusRelationshipUnidirectionalMap).composeTraversal(at(map(el), map(er))).modify(fUpsert(CharacterUnidirectionalRelationship((map(el), map(er))))))((storyState, statement) => statement match {
-                            case UpdateStatement(field, value) => field.modifyUnidirectionalRelationship(storyState, (map(el), map(er)), map, fUpdate(value.valueUnidirectionalRelationship(storyState, (map(el), map(er)), map).get))
-                            case InsertStatement(field, value) => field.modifyUnidirectionalRelationship(storyState, (map(el), map(er)), map, fInsert(value.valueUnidirectionalRelationship(storyState, (map(el), map(er)), map).get))
-                            case RemoveStatement(field, value) => field.modifyUnidirectionalRelationship(storyState, (map(el), map(er)), map, fRemove(value.valueUnidirectionalRelationship(storyState, (map(el), map(er)), map).get))
-                        })
-                    }
-                    case RelationshipBidirectionalDeclaration(elo, ero, modifyStatementList) => {
-                        val tuple = if (map(elo) < map(ero)) {
-                            (map(elo), map(ero))
-                        } else {
-                            (map(ero), map(elo))
-                        }
-
-                        modifyStatementList.foldLeft(storyState.applyLens(StoryState.focusRelationshipBidirectionalMap).composeTraversal(at(tuple)).modify(fUpsert(CharacterBidirectionalRelationship(tuple))))((storyState, statement) => statement match {
-                            case UpdateStatement(field, value) => field.modifyBidirectionalRelationship(storyState, tuple, map, fUpdate(value.valueUnidirectionalRelationship(storyState, tuple, map).get))
-                            case InsertStatement(field, value) => field.modifyBidirectionalRelationship(storyState, tuple, map, fInsert(value.valueUnidirectionalRelationship(storyState, tuple, map).get))
-                            case RemoveStatement(field, value) => field.modifyBidirectionalRelationship(storyState, tuple, map, fRemove(value.valueUnidirectionalRelationship(storyState, tuple, map).get))
-                        })
-                    }
-
-                }
-            })
-
-            storyStateWithRelationshipMap
-        }
+    lazy val expressionAssignment: PackratParser[Expression] = expressionConditionalOr ~ rep((":=" | "+=" | "-=") ~ expressionConditionalOr) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    // attribute
-
-    def attributeDeclaration = attributeOneSymbolDeclaration | attributeOneUnorderedDeclaration | attributeOneOrderedDeclaration | attributeSubsetSymbolDeclaration | attributeSubsetUnorderedDeclaration | attributeSubsetOrderedDeclaration
-
-    def attributeKeyword = "attribute" | "a"
-
-    def attributeOneSymbol = "one symbol" | "os"
-
-    def attributeOneSymbolDeclaration = attributeKeyword ~ identifier ~ attributeOneSymbol ^^ {
-        case a ~ name ~ ss => AttributeOneSymbol(Symbol(name))
+    lazy val expressionConditionalOr: PackratParser[Expression] = expressionConditionalAnd ~ rep("||" ~ expressionConditionalAnd) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    def attributeOneUnorderedKeyword = "one of unordered set" | "ou"
-
-    def attributeOneUnorderedDeclaration = attributeKeyword ~ identifier ~ attributeOneUnorderedKeyword ~ beginBlock ~ rep1(attributeValue) ~ endBlock ^^ {
-        case a ~ name ~ ou ~ bb ~ validSequence ~ eb => AttributeOneUnordered(Symbol(name), validSequence)
+    lazy val expressionConditionalAnd: PackratParser[Expression] = expressionEquality ~ rep("&&" ~ expressionEquality) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    def attributeOneOrderedKeyword = "one of ordered set" | "oo"
-
-    def attributeOneOrderedDeclaration = attributeKeyword ~ identifier ~ attributeOneOrderedKeyword ~ beginBlock ~ rep1(attributeValue) ~ endBlock ^^ {
-        case a ~ name ~ oo ~ bb ~ validSequence ~ eb => AttributeOneOrdered(Symbol(name), validSequence)
+    lazy val expressionEquality: PackratParser[Expression] = expressionRelational ~ rep(("==" | "!=") ~ expressionRelational) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    def attributeSubsetSymbol = "subset of symbols" | "ss"
-
-    def attributeSubsetSymbolDeclaration = attributeKeyword ~ identifier ~ attributeSubsetSymbol ^^ {
-        case a ~ name ~ ss => AttributeSubsetSymbol(Symbol(name))
+    lazy val expressionRelational: PackratParser[Expression] = expressionAdditive ~ rep(("<" | "<=" | ">=" | ">") ~ expressionAdditive) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    def attributeSubsetUnorderedKeyword = "subset of unordered set" | "su"
-
-    def attributeSubsetUnorderedDeclaration = attributeKeyword ~ identifier ~ attributeSubsetUnorderedKeyword ~ beginBlock ~ rep1(attributeValue) ~ endBlock ^^ {
-        case a ~ name ~ su ~ bb ~ validSequence ~ eb => AttributeSubsetUnordered(Symbol(name), validSequence)
+    lazy val expressionAdditive: PackratParser[Expression] = expressionMultiplicative ~ rep(("+" | "-") ~ expressionMultiplicative) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    def attributeSubsetOrderedKeyword = "subset of ordered set" | "so"
-
-    def attributeSubsetOrderedDeclaration = attributeKeyword ~ identifier ~ attributeSubsetOrderedKeyword ~ beginBlock ~ rep1(attributeValue) ~ endBlock ^^ {
-        case a ~ name ~ so ~ bb ~ validSequence ~ eb => AttributeSubsetOrdered(Symbol(name), validSequence)
+    lazy val expressionMultiplicative: PackratParser[Expression] = expressionUnary ~ rep(("*" | "/") ~ expressionUnary) ^^ {
+        case el ~ Nil => el
+        case el ~ ((op ~ er) :: rest) => rest.map({ case op1 ~ er1 => (op1, er1)}).foldLeft(ExpressionBinary(el, Symbol(op), er))((expression, pair) => pair match {
+            case (op1, er1) => ExpressionBinary(expression, Symbol(op1), er1)
+        })
     }
 
-    def attributeValue = symbol ^^ {
-        case s => Symbol(s.substring(1, s.length - 1))
+    lazy val expressionUnary: PackratParser[Expression] = opt("!") ~ expressionPostfix ^^ {
+        case None ~ e => e
+        case Some(s) ~ e => ExpressionUnary(e, Symbol(s))
     }
 
-    // character
-
-    def characterKeyword = "character" | "c"
-
-    def characterDeclaration = characterKeyword ~ identifier ~ beginBlock ~ rep(modifyStatement) ~ endBlock ^^ {
-        case c ~ name ~ bb ~ modifyStatementList ~ eb => Symbol(name) -> modifyStatementList
+    lazy val expressionPostfix: PackratParser[Expression] = expressionAtom ~ opt("++" | "+++" | "--" | "---") ^^ {
+        case e ~ None => e
+        case e ~ Some(s) => ExpressionUnary(e, Symbol(s))
     }
 
-    // relationship
+    lazy val expressionAtom: PackratParser[Expression] = expressionLiteral | expressionAttribute | expressionEnclosed
 
-    def relationshipKeyword = "relationship" | "r"
-
-    def relationshipUnidirectionalDeclaration = relationshipKeyword ~ identifier ~ "<->" ~ identifier ~ beginBlock ~ rep(modifyStatement) ~ endBlock ^^ {
-        case r ~ el ~ c ~ er ~ bb ~ modifyStatementList ~ eb => RelationshipBidirectionalDeclaration(Symbol(el), Symbol(er), modifyStatementList)
+    lazy val expressionEnclosed: PackratParser[Expression] = "(" ~ expression ~ ")" ^^ {
+        case pl ~ e ~ pr => e
     }
 
-    def relationshipBidirectionalDeclaration = relationshipKeyword ~ identifier ~ "->" ~ identifier ~ beginBlock ~ rep(modifyStatement) ~ endBlock ^^ {
-        case r ~ el ~ c ~ er ~ bb ~ modifyStatementList ~ eb => RelationshipUnidirectionalDeclaration(Symbol(el), Symbol(er), modifyStatementList)
+    lazy val expressionAttribute: PackratParser[ExpressionAttribute] = opt((expressionEntity | expressionRelationshipEnclosed) ~ ".") ~ identifier ^^ {
+        case Some((ao: ExpressionAttributeOwner) ~ d) ~ a => ExpressionAttribute(Some(ao), a)
+        case None ~ a => ExpressionAttribute(None, a)
     }
 
-    // modify
-
-    def modifyStatement = updateStatement | insertStatement | removeStatement
-
-    def updateStatement = fieldClause ~ ":=" ~ valueClause ^^ {
-        case f ~ o ~ v => UpdateStatement(f, v)
+    lazy val expressionEntity: PackratParser[ExpressionEntity] = identifier ^^ {
+        case e => ExpressionEntity(e)
     }
 
-    def insertStatement = fieldClause ~ "+=" ~ valueClause ^^ {
-        case f ~ o ~ v => InsertStatement(f, v)
+    lazy val expressionRelationshipEnclosed: PackratParser[ExpressionAttributeOwner] = "(" ~ expressionRelationship ~ ")" ^^ {
+        case pl ~ r ~ pr => r
     }
 
-    def removeStatement = fieldClause ~ "-=" ~ valueClause ^^ {
-        case f ~ o ~ v => RemoveStatement(f, v)
+    lazy val expressionRelationship: PackratParser[ExpressionRelationship] = expressionRelationshipUnidirectional | expressionRelationshipBidirectional
+
+    lazy val expressionRelationshipUnidirectional: PackratParser[ExpressionRelationshipUnidirectional] = identifier ~ "->" ~ identifier ^^ {
+        case el ~ ur ~ er => ExpressionRelationshipUnidirectional(el, er)
     }
 
-    // field clause
-
-    def fieldClause = field1Clause | field2Clause | field3Clause
-
-    def field1Clause = identifier ^^ {
-        case a => FieldSpecification1(Symbol(a))
+    lazy val expressionRelationshipBidirectional: PackratParser[ExpressionRelationshipBidirectional] = identifier ~ "<->" ~ identifier ^^ {
+        case el ~ br ~ er => ExpressionRelationshipBidirectional(el, er)
     }
 
-    def field2Clause = identifier ~ "." ~ identifier ^^ {
-        case e ~ d ~ a => FieldSpecification2(Symbol(e), Symbol(a))
+    lazy val expressionLiteral: PackratParser[ExpressionLiteral] = "\"" ~ litRegex ~ "\"" ^^ {
+        case ql ~ l ~ qr => ExpressionLiteral(Symbol(l))
     }
 
-    def field3Clause = identifier ~ "<->" ~ identifier ~ "." ~ identifier ^^ {
-        case el ~ c ~ er ~ d ~ a => FieldSpecification3(Symbol(el), Symbol(er), Symbol(a))
+    lazy val litRegex = """\p{Alpha}[\p{Alnum} -]*""".r
+
+    lazy val identifier: PackratParser[Symbol] = identifierRegex ^^ {
+        case i => Symbol(i)
     }
 
-    def field4Clause = identifier ~ "->" ~ identifier ~ "." ~ identifier ^^ {
-        case el ~ c ~ er ~ d ~ a => FieldSpecification4(Symbol(el), Symbol(er), Symbol(a))
-    }
+    lazy val identifierRegex = """\p{Alpha}\p{Alnum}*""".r
 
-    // value clause
-
-    def valueClause = value0Clause | value2Clause | value1Clause | value3Clause | value4Clause
-
-    def value0Clause = symbol ^^ {
-        case s => ValueSpecification0(Symbol(s.substring(1, s.length - 1)))
-    }
-
-    def value1Clause = identifier ^^ {
-        case a => ValueSpecification1(Symbol(a))
-    }
-
-    def value2Clause = identifier ~ "." ~ identifier ^^ {
-        case e ~ d ~ a => ValueSpecification2(Symbol(e), Symbol(a))
-    }
-
-    def value3Clause = identifier ~ "<->" ~ identifier ~ "." ~ identifier ^^ {
-        case el ~ c ~ er ~ d ~ a => ValueSpecification3(Symbol(el), Symbol(er), Symbol(a))
-    }
-
-    def value4Clause = identifier ~ "->" ~ identifier ~ "." ~ identifier ^^ {
-        case el ~ c ~ er ~ d ~ a => ValueSpecification4(Symbol(el), Symbol(er), Symbol(a))
-    }
-
-    def parse(text: String): Option[StoryState] = {
-        parseAll(statementSet, text) match {
-            case Success(storyState, next) => Some(storyState)
-            case NoSuccess(storyState, next) => {
-                println(storyState, next)
-                None
-            }
-        }
-    }
 }
 
-object Test extends Parser with App {
-    val story = io.Source.fromInputStream(getClass.getResourceAsStream("Sample.story")).mkString
+sealed trait Declaration
 
+case class DeclarationRelationship(entity: ExpressionRelationship, block: BlockAssignment) extends Declaration
 
-    parse(story.stripMargin) match {
-        case Some(storyState) => {
-            System.out.println(storyState)
-            //            val state0 = new StoryState(cast.map((c: Character) => (c.id -> c)).toMap, map)
-            //
-            //            val storyData = Map[String, Int]()
-            //            var lasttext = ""
-            //            var state = state0
-            //
-            //            for (i <- 1 to 100) {
-            //                val ctx = marriage.satisfy(state, storyData)
-            //                Fabula.fabula(ctx).foreach(eventExecution => eventExecution.successor.get._1.narration match {
-            //                    case None => ;
-            //                    case Some(s) => {
-            //                        if (s == lasttext) {
-            //                        } else {
-            //                            System.out.println(s)
-            //                            lasttext = s
-            //                        }
-            //                    }
-            //                })
-            //                state = ctx.successor().get._1
-            //            }
+case class DeclarationCharacter(entity: ExpressionEntity, block: BlockAssignment) extends Declaration
+
+case class DeclarationSetting(entity: ExpressionEntity, block: BlockAssignment) extends Declaration
+
+case class DeclarationState(block: BlockState) extends Declaration
+
+sealed trait DeclarationAttribute extends Declaration
+
+case class DeclarationAttributeOneSymbol(attribute: Symbol) extends DeclarationAttribute
+
+case class DeclarationAttributeOneUnordered(attribute: Symbol, block: BlockLiteral) extends DeclarationAttribute
+
+case class DeclarationAttributeOneOrdered(attribute: Symbol, block: BlockLiteral) extends DeclarationAttribute
+
+case class DeclarationAttributeSubsetSymbol(attribute: Symbol) extends DeclarationAttribute
+
+case class DeclarationAttributeSubsetUnordered(attribute: Symbol, block: BlockLiteral) extends DeclarationAttribute
+
+case class DeclarationAttributeSubsetOrdered(attribute: Symbol, block: BlockLiteral) extends DeclarationAttribute
+
+sealed trait Block
+
+case class BlockAssignment(assignmentList: List[Expression]) extends Block
+
+case class BlockLiteral(literalList : List[ExpressionLiteral]) extends Block
+
+case class BlockState(declarationAttributeList : List[DeclarationAttribute], declarationCharacterList : List[DeclarationCharacter], declarationRelationshipList: List[DeclarationRelationship])
+
+sealed trait Expression
+
+case class ExpressionLiteral(literal: Symbol) extends Expression
+
+case class ExpressionAttribute(owner: Option[ExpressionAttributeOwner], attribute: Symbol) extends Expression
+
+case class ExpressionUnary(expression: Expression, op: Symbol) extends Expression
+
+case class ExpressionBinary(left: Expression, op: Symbol, right: Expression) extends Expression
+
+case class ExpressionAssignment(left: Expression, op: Symbol, right: Expression) extends Expression
+
+sealed trait ExpressionAttributeOwner
+
+sealed trait ExpressionRelationship extends ExpressionAttributeOwner
+
+case class ExpressionRelationshipBidirectional(left: Symbol, right: Symbol) extends ExpressionRelationship
+
+case class ExpressionRelationshipUnidirectional(left: Symbol, right: Symbol) extends ExpressionRelationship
+
+case class ExpressionEntity(entity: Symbol) extends ExpressionAttributeOwner
+
+object ParserTest extends Parser with App {
+
+    parseAll(expression, "a := \"this is a test\"") match {
+        case Success(storyState, next) => println(storyState)
+        case NoSuccess(storyState, next) => println(storyState)
+    }
+
+    parseAll(expressionMultiplicative, "entity.test") match {
+        case Success(storyState, next) => println(storyState)
+        case NoSuccess(storyState, next) => println(storyState)
+    }
+
+    parseAll(expressionMultiplicative, "(entity -> entity).test") match {
+        case Success(storyState, next) => println(storyState)
+        case NoSuccess(storyState, next) => println(storyState)
+    }
+
+    parseAll(expressionMultiplicative, "(entity <-> entity).test") match {
+        case Success(storyState, next) => println(storyState)
+        case NoSuccess(storyState, next) => println(storyState)
+    }
+
+    parseAll(declarationCharacter, "character matt { first := \"Matt\" last := \"Fielding\" }") match {
+        case Success(storyState, next) => println(storyState)
+        case NoSuccess(storyState, next) => println(storyState)
+    }
+
+    parseAll(declarationRelationship, "relationship matt <-> jake { first := \"Matt\" last := \"Fielding\" age += \"young adult\" + \"adult\" (matt->jake).friendship := \"high\" }") match {
+        case Success(storyState, next) => storyState match {
+            case DeclarationRelationship(_, BlockAssignment(l)) => l.foreach(println(_))
         }
+        case NoSuccess(storyState, next) => println(storyState)
+    }
+
+    parseAll(declarationState, io.Source.fromInputStream(getClass.getResourceAsStream("Sample.story")).mkString)match {
+        case Success(storyState, next) => storyState match {
+            case DeclarationState(BlockState(a, c, r)) => {
+                a.foreach(println(_))
+                c.foreach(println(_))
+                r.foreach(println(_))
+            }
+        }
+        case NoSuccess(storyState, next) => println(storyState)
     }
 }
-
-//goal {
-//strategy {
-//find c1 c2 where
-//c1 isnt c2
-//c1 orientation contains c2 gender
-//c2 orientation contains c1 gender
-//relationship c1 c2 status does not contain marriage;
-//subgoal alive c1;
-//subgoal alive c2;
-//subgoal single c1;
-//subgoal single c2;
-//c1 c2 status += marriage
-//narrate "{{c1.first.iterator.next}} and {{c2.first.iterator.next}} marry.";
-//}
-//}
-//
-//goal alive "Alive" {
-//strategy c "Alive - No Op" {
-//find c1 where
-//c1 is c
-//c1 life is dead;
-//c1 life := alive;
-//narrate "{{c1.first.iterator.next}} returns to Melrose Place, very much alive.";
-//}
-//strategy c "Alive - Alive" {
-//find c1 where
-//c1 is c
-//c1 life is alive;
-//narrate "{{c1.first.iterator.next}} is alive.";
-//}
-//}
-//
-//goal single "Single" {
-//strategy c "Single - Divorce" {
-//find c1 c2 where
-//c1 is c
-//c1 isnt c2
-//relationship c1 c2 status contains marriage;
-//remove marriage from c1 c2 status;
-//narrate "{{c1.first.iterator.next}} and {{c2.first.iterator.next}} divorce.";
-//}
-//strategy c "Single - Death" {
-//find c1 c2 where
-//c1 is c
-//c1 isnt c2
-//relationship c1 c2 status contains marriage;
-//c2 life := dead;
-//remove marriage from c1 c2 status;
-//narrate "{{c2.first.iterator.next}} dies, leaving {{c1.first.iterator.next}} alone.";
-//}
-//strategy c "Single - Noop" {
-//none c1 c2 where
-//c1 is c
-//c1 isnt c2
-//relationship c1 c2 status contains marriage;
-//narrate "{{c.first.iterator.next}} is single.";
-//}
-//}
