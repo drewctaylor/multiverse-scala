@@ -10,9 +10,9 @@ package edu.gatech.dt87.multiverse.planner
 trait Strategy[S, X, Y] {
 
     /**
-     * @return the name of the strategy
+     * @return the label for the strategy
      */
-    def name: String
+    def label: String
 
     /**
      * Given a state and a strategy input, return a description of the effort of the planner to implement that strategy.
@@ -27,13 +27,13 @@ trait Strategy[S, X, Y] {
 /**
  * A strategy is a composition of strategy steps: subgoals and events.
  *
- * @param name the name of the strategy
+ * @param label the label for the strategy
  * @param strategyStepSequence the sequence of strategy steps: subgoals and events.
  * @tparam S the state type
  * @tparam X the strategy input type
  * @tparam Y the strategy output type
  */
-case class StrategyImplementation[S, X, Y](name: String, strategyStepSequence: StrategyStep[S, X, Y]) extends Strategy[S, X, Y] {
+case class StrategyImplementation[S, X, Y](label: String, strategyStepSequence: StrategyStep[S, X, Y]) extends Strategy[S, X, Y] {
 
     /**
      * Given a state and a strategy input, return a description of the effort of the planner to implement that strategy.
@@ -56,18 +56,18 @@ object Strategy {
     /**
      * A strategy factory.
      *
-     * @param name the name of the strategy
+     * @param label the label for the strategy
      * @param strategyStepSequence the sequence of strategy steps: subgoals and events.
      * @tparam S the state type
      * @tparam X the strategy input type
      * @tparam Y the strategy output type
      */
-    def apply[S, X, Y](name: String, strategyStepSequence: StrategyStep[S, X, Y]): Strategy[S, X, Y] = {
-        StrategyImplementation(name, strategyStepSequence)
+    def apply[S, X, Y](label: String, strategyStepSequence: StrategyStep[S, X, Y]): Strategy[S, X, Y] = {
+        StrategyImplementation(label, strategyStepSequence)
     }
 
     /**
-     * A strategy factory; the system chooses the name of the strategy.
+     * A strategy factory; the system chooses the label for the strategy.
      *
      * @param strategyStepSequence the sequence of strategy steps: subgoals and events.
      * @tparam S the state type
@@ -75,7 +75,7 @@ object Strategy {
      * @tparam Y the strategy output type
      */
     def apply[S, X, Y](strategyStepSequence: StrategyStep[S, X, Y]): Strategy[S, X, Y] = {
-        StrategyImplementation(s"Unnamed Strategy ${index.next()}", strategyStepSequence)
+        StrategyImplementation(s"Unlabeled Strategy ${index.next()}", strategyStepSequence)
     }
 }
 

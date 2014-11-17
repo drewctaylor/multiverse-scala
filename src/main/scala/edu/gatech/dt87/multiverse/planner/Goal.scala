@@ -12,9 +12,9 @@ import edu.gatech.dt87.multiverse.random.Random
 trait Goal[S, X, Y] {
 
     /**
-     * @return the name of the goal
+     * @return the label for the goal
      */
-    def name: String
+    def label: String
 
     /**
      * @return the set of strategies, any one of which may achieve the goal
@@ -34,13 +34,13 @@ trait Goal[S, X, Y] {
 /**
  * A goal is a set of strategies, any one of which may achieve the goal.
  *
- * @param name the name of the goal
+ * @param label the label for the goal
  * @param strategySet the set of strategies, any one of which may achieve the goal
  * @tparam S the state type
  * @tparam X the goal input type
  * @tparam Y the goal output type
  */
-case class GoalImplementation[S, X, Y](name: String, strategySet: Set[Strategy[S, X, Y]]) extends Goal[S, X, Y] {
+case class GoalImplementation[S, X, Y](label: String, strategySet: Set[Strategy[S, X, Y]]) extends Goal[S, X, Y] {
 
     /**
      * Given a state and a goal input, return a description of the effort of the planner to achieve that goal.
@@ -69,19 +69,19 @@ object Goal {
     /**
      * A goal factory.
      *
-     * @param name the name of the goal
+     * @param label the label for the goal
      * @param strategySequence the set of strategies, any one of which may satisfy the goal
      * @tparam S the state type
      * @tparam X the goal input type
      * @tparam Y the goal output type
      * @return the goal
      */
-    def apply[S, X, Y](name: String, strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
-        GoalImplementation[S, X, Y](name, strategySequence.toSet)
+    def apply[S, X, Y](label: String, strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
+        GoalImplementation[S, X, Y](label, strategySequence.toSet)
     }
 
     /**
-     * A goal factory; the system chooses the name of the goal.
+     * A goal factory; the system chooses the label for the goal.
      *
      * @param strategySequence the set of strategies, any one of which may satisfy the goal
      * @tparam S the state type
@@ -90,7 +90,7 @@ object Goal {
      * @return the goal
      */
     def apply[S, X, Y](strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
-        GoalImplementation[S, X, Y](s"Unnamed Goal ${iterator.next()}", strategySequence.toSet)
+        GoalImplementation[S, X, Y](s"Unlabeled Goal ${iterator.next()}", strategySequence.toSet)
     }
 }
 

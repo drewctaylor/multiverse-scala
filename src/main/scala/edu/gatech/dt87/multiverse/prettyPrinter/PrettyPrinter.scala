@@ -6,13 +6,13 @@ import edu.gatech.dt87.multiverse.story.{StoryEntity, StoryEntitySet, StoryState
 object PrettyPrinter {
 
     def print[S, X, Y](goalExecution : GoalExecution[S, X, Y], depth : Int = 0) : String = {
-        goalExecution.strategyExecutionSequence.foldLeft(s"""${" " * depth}Goal "${goalExecution.goal.name}" (${if(goalExecution.successor().isDefined) "Success" else "Failure"})\n""")((string, strategyExecution) => {
+        goalExecution.strategyExecutionSequence.foldLeft(s"""${" " * depth}Goal "${goalExecution.goal.label}" (${if(goalExecution.successor().isDefined) "Success" else "Failure"})\n""")((string, strategyExecution) => {
             string + print(strategyExecution, depth + 4)
         })
     }
 
     def print[S, X, Y](strategyExecution : StrategyExecution[S, X, Y], depth : Int) : String = {
-        strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence().foldLeft(s"""${" " * depth}Strategy "${strategyExecution.strategy.name}" (${if(strategyExecution.successor().isDefined) "Success" else "Failure"})\n""" )((string, strategyStepExecution) => {
+        strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence().foldLeft(s"""${" " * depth}Strategy "${strategyExecution.strategy.label}" (${if(strategyExecution.successor().isDefined) "Success" else "Failure"})\n""" )((string, strategyStepExecution) => {
             string + print(strategyStepExecution, depth + 4)
         })
     }
@@ -30,7 +30,7 @@ object PrettyPrinter {
     }
 
     def print[S, X, Y](eventExecution : EventExecution[S, X, Y], depth : Int) : String = {
-        s"""${" " * depth}Event "${eventExecution.event.name}" (${if(eventExecution.successor().isDefined) "Success" else "Failure"})\n"""
+        s"""${" " * depth}Event "${eventExecution.event.label}" (${if(eventExecution.successor().isDefined) "Success" else "Failure"})\n"""
     }
 
     def print[S, X, X1, Y1, Y](subgoalExecution : SubgoalExecution[S, X, X1, Y1, Y], depth : Int) : String = {

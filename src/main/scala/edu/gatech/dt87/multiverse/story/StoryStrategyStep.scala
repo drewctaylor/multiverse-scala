@@ -628,8 +628,8 @@ object StoryStrategyStep {
 
     def eventSatisfaction(statementSatisfaction: StatementSatisfaction, goalFor: Symbol => Goal[StoryState, StorySymbolMap, StorySymbolMap], declarationFor: Symbol => DeclarationGoal): Subgoal[StoryState, StorySymbolMap, StorySymbolMap, StorySymbolMap, StorySymbolMap] = {
         val goal = new Goal[StoryState, StorySymbolMap, StorySymbolMap]() {
-            def name: String = {
-                goalFor(statementSatisfaction.goal).name
+            def label: String = {
+                goalFor(statementSatisfaction.goal).label
             }
 
             def strategySet: Set[Strategy[StoryState, StorySymbolMap, StorySymbolMap]] = {

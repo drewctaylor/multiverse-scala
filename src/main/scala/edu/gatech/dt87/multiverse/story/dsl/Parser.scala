@@ -336,9 +336,9 @@ object Parser {
                         Strategy(eventList)
                 }).toSeq: _*))
 
-                goalList.map((g) => goalForGoalName(g.name).identifier -> g).map(map += _)
+                goalList.map((g) => goalForGoalName(g.label).identifier -> g).map(map += _)
 
-                val top = goalList.filter((g) => declarationFor(goalForGoalName(g.name).identifier).parameterList.isEmpty)
+                val top = goalList.filter((g) => declarationFor(goalForGoalName(g.label).identifier).parameterList.isEmpty)
 
                 Some(storyState, top.toSet)
             }

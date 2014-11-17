@@ -10,9 +10,9 @@ package edu.gatech.dt87.multiverse.planner
 sealed trait StrategyStep[S, X, Y] {
 
     /**
-     * @return the name of the strategy step.
+     * @return the label for the strategy step.
      */
-    def name(): String
+    def label(): String
 
     /**
      * Given a strategy step input, return a description of the effort of the planner to satisfy that strategy step.
@@ -33,10 +33,10 @@ sealed trait StrategyStep[S, X, Y] {
     def merge[Z](right: StrategyStep[S, Y, Z]): StrategyStep[S, X, Z] = new StrategyStep[S, X, Z] {
 
         /**
-         * @return the name of the strategy step.
+         * @return the label for the strategy step.
          */
-        def name(): String = {
-            s"${StrategyStep.this.name()} merge ${right.name()}"
+        def label(): String = {
+            s"${StrategyStep.this.label()} merge ${right.label()}"
         }
 
         /**
@@ -61,7 +61,7 @@ sealed trait StrategyStep[S, X, Y] {
  * A subgoal is a function that transforms the subgoal input into goal input, a goal, and a function that transforms
  * goal output into subgoal output.
  *
- * @param name the name of the subgoal
+ * @param label the label for the subgoal
  * @param transformInput the function that transforms the subgoal input into the goal input
  * @param goal the goal.
  * @param transformOutput the function that transforms the goal output into the subgoal output
@@ -71,7 +71,7 @@ sealed trait StrategyStep[S, X, Y] {
  * @tparam Y1 the goal output type
  * @tparam Y the subgoal output type
  */
-case class Subgoal[S, X, X1, Y1, Y](name: String, transformInput: (S, X) => X1, goal: Goal[S, X1, Y1], transformOutput: (S, X, Y1) => Y) extends StrategyStep[S, X, Y] {
+case class Subgoal[S, X, X1, Y1, Y](label: String, transformInput: (S, X) => X1, goal: Goal[S, X1, Y1], transformOutput: (S, X, Y1) => Y) extends StrategyStep[S, X, Y] {
 
     /**
      * Given a state and a subgoal input, return a description of the effort of the planner to satisfy that subgoal.
@@ -92,7 +92,7 @@ object Subgoal {
     val iterator = Iterator.from(0)
 
     /**
-     * A subgoal factory; the system chooses the name of the subgoal.
+     * A subgoal factory; the system chooses the label for the subgoal.
      *
      * @param transformInput the function that transforms the subgoal input into the goal input
      * @param goal the goal.
@@ -104,20 +104,20 @@ object Subgoal {
      * @tparam Y the subgoal output type
      */
     def apply[S, X, X1, Y1, Y](transformInput: (S, X) => X1, goal: Goal[S, X1, Y1], transformOutput: (S, X, Y1) => Y): Subgoal[S, X, X1, Y1, Y] = {
-        Subgoal[S, X, X1, Y1, Y](s"Unnamed Subgoal ${iterator.next()}", transformInput, goal, transformOutput)
+        Subgoal[S, X, X1, Y1, Y](s"Unlabeled Subgoal ${iterator.next()}", transformInput, goal, transformOutput)
     }
 }
 
 /**
  * An event is a function that transforms a state into a succeeding state
  *
- * @param name the name of the Event.
+ * @param label the label for the Event.
  * @param transform the function that transforms the state into the succeeding state.
  * @tparam S the state type.
  * @tparam X the event input type
  * @tparam Y the event output type
  */
-case class Event[S, X, Y](name: String, transform: (S, X) => Option[(S, Y)]) extends StrategyStep[S, X, Y] {
+case class Event[S, X, Y](label: String, transform: (S, X) => Option[(S, Y)]) extends StrategyStep[S, X, Y] {
 
     /**
      * Given a state and an event input, return a description of the effort of the planner to satisfy that event.
@@ -139,7 +139,7 @@ object Event {
     val iterator = Iterator.from(0)
 
     /**
-     * An event factory; the system chooses the name of the event.
+     * An event factory; the system chooses the label for the event.
      *
      * @param transform the function that transforms the state into the succeeding state.
      * @tparam S the state type.
@@ -148,7 +148,7 @@ object Event {
      * @return the event.
      */
     def apply[S, X, Y](transform: (S, X) => Option[(S, Y)]): Event[S, X, Y] = {
-        Event[S, X, Y](s"Unnamed Event ${iterator.next()}", transform)
+        Event[S, X, Y](s"Unlabeled Event ${iterator.next()}", transform)
     }
 }
 

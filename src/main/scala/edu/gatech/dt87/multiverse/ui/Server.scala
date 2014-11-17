@@ -40,7 +40,7 @@ case class Server(state: StoryState, goalSet: Set[Goal[StoryState, StorySymbolMa
     def satisfiableGoalSet(stateId: String): String = {
         println(PrettyPrinter.print(stateForId(stateId), 0))
 
-        val ret = "[" + Planner.satisfiableGoalSet(stateForId(stateId), Map[Symbol, (Symbol, Int)](), goalSet).map((goal: Goal[StoryState, StorySymbolMap, StorySymbolMap]) => { s"""{"goalId":"${idForGoalHelper(goal)}","goalName":"${goal.name}"}"""}).mkString(",") + "]"
+        val ret = "[" + Planner.satisfiableGoalSet(stateForId(stateId), Map[Symbol, (Symbol, Int)](), goalSet).map((goal: Goal[StoryState, StorySymbolMap, StorySymbolMap]) => { s"""{"goalId":"${idForGoalHelper(goal)}","goalName":"${goal.label}"}"""}).mkString(",") + "]"
         ret
     }
 
@@ -48,7 +48,7 @@ case class Server(state: StoryState, goalSet: Set[Goal[StoryState, StorySymbolMa
         val goalExecution = goalForId(goalId).satisfy(stateForId(stateId), Map[Symbol, (Symbol, Int)]())
         println(PrettyPrinter.print(goalExecution));
 
-        val ret = "[" + (Fabula.fabula(goalExecution): Seq[EventExecution[StoryState, _, _]]).map((eventContext: EventExecution[StoryState, _, _]) => { s"""{"eventName":"${eventContext.event.name}","stateId":"${idForStateHelper(eventContext.successor().get._1)}","narration":"${eventContext.successor().get._1.narration getOrElse ""}"}"""}).mkString(",") + "]"
+        val ret = "[" + (Fabula.fabula(goalExecution): Seq[EventExecution[StoryState, _, _]]).map((eventContext: EventExecution[StoryState, _, _]) => { s"""{"eventName":"${eventContext.event.label}","stateId":"${idForStateHelper(eventContext.successor().get._1)}","narration":"${eventContext.successor().get._1.narration getOrElse ""}"}"""}).mkString(",") + "]"
         ret.replace('\n',' ')
     }
 }
