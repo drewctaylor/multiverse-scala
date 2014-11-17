@@ -1,0 +1,174 @@
+state {
+    character amanda {
+        life := "alive"
+        first := "Amanda"
+        last := "Woodward"
+        gender := "female"
+        orientation := "male"
+        age := 30
+    }
+    character alison {
+        life := "alive"
+        first := "Alison"
+        last := "Parker"
+        gender := "female"
+        orientation := "male"
+        age := 30
+    }
+    character jane {
+        life := "alive"
+        first := "Jane"
+        last := "Andrews"
+        gender := "female"
+        orientation := "male"
+        age := 30
+    }
+    character jake {
+        life := "alive"
+        first := "Jake"
+        last := "Hanson"
+        gender := "male"
+        orientation := "male" + "female"
+        age := 30
+    }
+    character billy {
+        life := "alive"
+        first := "Billy"
+        last := "Campbell"
+        gender := "male"
+        orientation := "female"
+        age := 30
+    }
+    character matt {
+        life := "alive"
+        first := "Matt"
+        last := "Fielding"
+        gender := "male"
+        orientation := "male"
+        age := 30
+    }
+    character peter {
+        life := "alive"
+        first := "Peter"
+        last := "Burns"
+        gender := "male"
+        orientation := "female"
+        age := 30
+    }
+    character michael {
+        life := "alive"
+        first := "Michael"
+        last := "Mancini"
+        gender := "male"
+        orientation := "female"
+        age := 30
+    }
+    character sydney {
+        life := "alive"
+        first := "Sydney"
+        last := "Andrews"
+        gender := "female"
+        orientation := "male" + "female"
+        age := 30
+    }
+    character kimberly {
+        life := "alive"
+        first := "Kimberly"
+        last := "Shaw"
+        gender := "female"
+        orientation := "male" + "female"
+        age := 30
+    }
+    character palmer {
+        life := "alive"
+        first := "Palmer"
+        last := "Woodward"
+        gender := "male"
+        orientation := "female"
+        age := "60"
+    }
+
+    amanda <-> billy {
+        marriage := true
+    }
+
+    palmer <-> alison {
+        marriage := true
+    }
+
+    amanda -> palmer {
+        child := true
+    }
+
+    palmer -> amanda {
+        parent := true
+    }
+}
+
+goal life (character c) {
+    strategy "Character Life - No Operation" {
+        ?= c.life == "alive"
+
+        "<div class='action'>{{c.first}} lies by the pool.</div>"
+    }
+
+    strategy "Character Life - Resurrect" {
+        ?= c.life == "dead"
+
+        "<div class='action'>{{c.first}} returns to Melrose Place, very much alive.</div>"
+    }
+}
+
+goal single (character c1) {
+    strategy "Character Single - No Operation" {
+        character c2 !?= (c1<->c2).marriage
+
+        "<div class='action'>{{c1.first}} lies by the pool, and {{c1.sub}} dreams of love while sunning {{c1.ref}}.</div>"
+    }
+
+    strategy "Character Single - By Death" {
+        character c2 ?= (c1<->c2).marriage
+
+        c2.life := "dead"
+
+        (c1<->c2).marriage := false
+
+        "<div class='action'>{{c2.first}} dies, leaving {{c1.first}} alone.</div>"
+    }
+
+    strategy "Character Single - By Divorce" {
+        character c2 ?= (c1<->c2).marriage
+
+        (c1<->c2).marriage := false
+
+        "<div class='action'>{{c2.first}} and {{c1.first}} divorce.</div>"
+    }
+}
+
+goal marry () "Marriage Scene" {
+    strategy {
+        character c1, character c2 ?=
+          c1 != c2 &&
+          c1.gender [ c2.orientation &&
+          c2.gender [ c1.orientation
+
+        life(c1)
+        life(c2)
+        single(c1)
+        single(c2)
+
+        (c1<->c2).marriage := true
+
+        "<div class='action'>{{c1.first}} and {{c2.first}} marry.</div>"
+    }
+}
+
+goal divorce() "Divorce Scene" {
+    strategy {
+        character c1, character c2 ?= (c1<->c2).marriage
+
+        (c1<->c2).marriage := false
+
+        "<div class='action'>{{c2.first}} and {{c1.first}} divorce.</div>"
+    }
+}
