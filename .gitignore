@@ -17,6 +17,7 @@ project/plugins/project/
 *.iml
 .idea/
 
-# intellij sbt
+# intellij plugin
+out/
 .idea_modules/
 
