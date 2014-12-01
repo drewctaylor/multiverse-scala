@@ -33,7 +33,7 @@ case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]])
     }
 
     def initial(): String = {
-        val ret = s"""{ "stateId" : "${idForStateHelper(state)}", "state" : ${PrettyPrinter.json(state)} }"""
+        val ret = s"""{ "title" : "${state.title.getOrElse("Untitled")}", "stateId" : "${idForStateHelper(state)}", "state" : ${PrettyPrinter.json(state)} }"""
         ret
     }
 

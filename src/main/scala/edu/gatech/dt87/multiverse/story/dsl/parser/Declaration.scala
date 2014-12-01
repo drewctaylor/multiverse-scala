@@ -9,10 +9,12 @@ case class DeclarationEntityKind(kind: ExpressionIdentifier, block: BlockAssignm
 
 /**
  * A story declaration consists of a state declaration and a set of goal declarations.
+ * @param title the title of the story
+ * @param seed the random seed for the story
  * @param state a state declaration
  * @param goalList a set of goal declarations.
  */
-case class DeclarationStory(state: DeclarationState, goalList: List[DeclarationGoal]) extends Declaration
+case class DeclarationStory(title: Option[ExpressionLiteralString], seed: Option[ExpressionLiteralNumber], state: DeclarationState, goalList: List[DeclarationGoal]) extends Declaration
 
 /**
  * A goal declaration consists of a goal identifier, a parameter list, and a goal block.

@@ -50,6 +50,10 @@ require(["jquery", "handlebars", "serverProxy"], function ($, handlebars, server
         }
 
         var state = serverProxy.initial();
+
+        $(".title").text(state.title);
+        $("title").text(state.title);
+
         var goalSet = serverProxy.satisfiableGoalSet(state.stateId);
 
         var divScene = $("<div class=\"scene\"></div>");

@@ -3,8 +3,7 @@ package edu.gatech.dt87.multiverse.random
 import scala.collection.generic.CanBuildFrom
 
 object Random {
-    val randomSeed = 0
-    val random = new scala.util.Random(randomSeed)
+    var random = new scala.util.Random(0)
 
     def nextInt(n: Int): Int = {
         random.nextInt(n)

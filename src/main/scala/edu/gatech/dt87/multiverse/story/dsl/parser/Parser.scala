@@ -12,8 +12,9 @@ class Parser extends TokenParsers with LexerTokens {
     type Tokens = Lexer
     val lexical: Tokens = new Lexer()
 
-    lazy val declarationStory = declarationState ~ rep(declarationGoal) ^^ {
-        case s ~ gl => DeclarationStory(s, gl)
+    lazy val declarationStory = opt(lexical.TokenKeywordStory ~ expressionString ~ opt(expressionNumber)) ~ declarationState ~ rep(declarationGoal) ^^ {
+        case None ~ s ~ gl => DeclarationStory(None, None, s, gl)
+        case Some(_ ~ t ~ n) ~ s ~ gl => DeclarationStory(Some(t), n, s, gl)
     }
 
     lazy val declarationGoal: Parser[DeclarationGoal] = lexical.TokenKeywordGoal ~ expressionIdentifier ~ lexical.TokenKeywordParenthesesLeft ~ opt(declarationParameterList) ~ lexical.TokenKeywordParenthesesRight ~ opt(expressionString) ~ blockGoal ^^ {

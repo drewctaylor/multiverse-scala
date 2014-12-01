@@ -13,7 +13,7 @@ object Compiler {
 
         parser.phrase(parser.declarationStory)(new parser.lexical.Scanner(source)) match {
 
-            case parser.Success(DeclarationStory(s, gl), next) =>
+            case parser.Success(DeclarationStory(title, seed, s, gl), next) =>
 
                 val eventList = s.block.declarationList.foldLeft(List[Event[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]]())((el, d) => d match {
                     case DeclarationEntity(k, o, ba) =>
@@ -34,9 +34,8 @@ object Compiler {
 
                 val step = eventList.reduce((a: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap], b: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]) => a merge b)
                 val strategy: Strategy[State, SymbolMap, SymbolMap] = Strategy(step)
-                val goalexecution = Goal(strategy).satisfy(State(), Map())
-                val storyState = goalexecution.successor().get._1
-                val storySymbolMap = Map[Symbol, (Symbol, Int)]()
+                val goalExecution = Goal(strategy).satisfy(State(title.map(_.value), seed.map(_.value.rounded.toInt)), Map())
+                val storyState = goalExecution.successor().get._1
 
                 var map = mutable.Map[Symbol, Goal[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]]()
                 val goalForGoalSymbol = (gs: Symbol) => map(gs)
