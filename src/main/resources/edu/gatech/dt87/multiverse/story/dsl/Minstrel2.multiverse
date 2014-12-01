@@ -7,68 +7,57 @@ state {
 }
 
 goal checkSceneForSuspense (character c) {
-    // add suspense via character emotion
     strategy {
 
         "{{c.first}} was very scared."
     }
 
-    // add suspense via failed escape
     strategy {
 
 
-        "{{c.first} tried to escape, but failed."
+        "{{c.first}} tried to escape, but failed."
     }
 }
 
 goal checkSceneForTragedy (character c) {
-    // add add tragedy via loved one
     strategy {
 
     }
 }
 
 goal checkStoryForCharacterization {
-    // add characterization statement
     strategy {
 
     }
 
-    // add characterization example
     strategy {
 
     }
 }
 
 goal checkStoryForForeshadowing {
-    // add foreshadowing
     strategy {
 
     }
 }
 
 goal checkConsistencyGoal {
-    // make consistent supergoal
     strategy {
 
     }
 
-    // make consistent motivating state
     strategy {
 
     }
 
-    // make consistent p-health
     strategy {
 
     }
 
-    // general motivating state
     strategy {
 
     }
 
-    // check act preconditions
     strategy {
     }
 }

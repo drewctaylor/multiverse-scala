@@ -10,4 +10,6 @@ libraryDependencies ++= Seq(
     "com.github.julien-truffaut" %% "monocle-generic" % "0.5.1",
     "com.github.julien-truffaut" %% "monocle-macro" % "0.5.1")
 
+mainClass in Compile := Some("edu.gatech.dt87.multiverse.ui.Main")
+
 assemblyJarName in assembly := "multiverse.jar"

@@ -43,8 +43,7 @@ goal instantiateEvidence(belief b, fact f1) {
         (a -> f2).intends := true
         (b -> f2).evidence := true
     }
-
-
+    
     strategy {
         characterGoal g {
             actor := f1.object

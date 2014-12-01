@@ -76,7 +76,7 @@ state {
         first := "Kimberly"
         last := "Shaw"
         gender := "female"
-        orientation := "male" + "female"
+        orientation := "male" union "female"
         age := 30
     }
     character palmer {
@@ -115,6 +115,8 @@ goal life (character c) {
     strategy "Character Life - Resurrect" {
         ?= c.life == "dead"
 
+        c.life := "alive"
+
         "<div class='action'>{{c.first}} returns to Melrose Place, very much alive.</div>"
     }
 }
@@ -149,8 +151,9 @@ goal marry () "Marriage Scene" {
     strategy {
         character c1, character c2 ?=
           c1 != c2 &&
-          c1.gender [ c2.orientation &&
-          c2.gender [ c1.orientation
+          (c1<->c2).marriage == empty &&
+          c1.gender subset c2.orientation &&
+          c2.gender subset c1.orientation
 
         life(c1)
         life(c2)
@@ -163,11 +166,79 @@ goal marry () "Marriage Scene" {
     }
 }
 
+goal forcedMarriage() "Forced Marriage Plot" {
+  strategy {
+    character child, character parent ?=
+      (child->parent).child &&
+      (parent->child).parent
+
+    character spouse ?= (child<->spouse).marriage
+
+    character lover ?=
+      child  != lover &&
+      parent != lover &&
+      spouse != lover &&
+      child.gender subset lover.orientation
+
+    "<div class=\"action\">
+      Although {{child.first}} and {{spouse.first}} are happily married,
+      {{parent.first}} does not approve of {{spouse.first}}, and {{parent.sub}}
+      would rather that {{child.first}} marry {{parent.pos}} protoge,
+      {{lover.first}}. One day, {{parent.first}} pulls {{child.first}} aside and
+      tells {{child.obj}}, \"Divorce {{spouse.first}}, or I'll ruin {{spouse.obj}}.\"
+    </div>"
+
+    (child<->spouse).marriage := empty
+
+    "<div class='action'>
+      {{child.first}} steels {{child.ref}}, then confronts {{spouse.first}}: 'I
+      want a divorce.'
+    </div>"
+
+    (child<->lover).marriage := true
+
+    "<div class='action'>
+      Soon after, {{child.first}} marries {{lover.first}}.
+    </div>"
+
+    character friend ?=
+      friend != lover &&
+      friend != child &&
+      friend != spouse &&
+      friend != parent
+
+    "<div class='action'>
+      Shocked, {{spouse.first}} is comforted by {{spouse.det}} friend, {{friend.first}}.
+    </div>"
+
+    character rebound ?=
+      rebound != lover &&
+      rebound != child &&
+      rebound != spouse &&
+      rebound != parent &&
+      spouse.gender subset rebound.orientation &&
+      rebound.gender subset spouse.orientation
+
+    "<div class=\"action\">
+      Ultimately, {{spouse.first}} finds a new love in {{rebound.first}}, and they marry.
+    </div>"
+
+    (spouse<->rebound).marriage := true
+
+    parent.life := "dead"
+    (child<->lover).marriage := false
+
+    "<div class='action'>
+      {{parent.first}} unexpectedly dies, leaving {{child.first}} free to divorce {{child.det}} spouse.
+    </div>"
+  }
+}
+
 goal divorce() "Divorce Scene" {
     strategy {
         character c1, character c2 ?= (c1<->c2).marriage
 
-        (c1<->c2).marriage := false
+        (c1<->c2).marriage := empty
 
         "<div class='action'>{{c2.first}} and {{c1.first}} divorce.</div>"
     }

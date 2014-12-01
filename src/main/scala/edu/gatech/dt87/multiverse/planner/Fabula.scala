@@ -1,6 +1,4 @@
-package edu.gatech.dt87.multiverse.story
-
-import edu.gatech.dt87.multiverse.planner._
+package edu.gatech.dt87.multiverse.planner
 
 /**
 * Created by drewtaylor on 10/1/14.

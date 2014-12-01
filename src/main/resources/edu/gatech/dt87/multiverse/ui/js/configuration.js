@@ -9,7 +9,7 @@ require.config({
 require(["jquery", "handlebars", "serverProxy"], function ($, handlebars, serverProxy) {
     $(document).ready(function() {
         function satisfy(stateId, goalId, divScene) {
-            var eventSequence = serverProxy.satisfyGoal(stateId, goalId);
+            var eventSequence = serverProxy.satisfyGoal(stateId, goalId).fabula
 
             var narrationArrayWithDuplicates = eventSequence.map(function(element) {
                 return element.narration;
@@ -49,7 +49,7 @@ require(["jquery", "handlebars", "serverProxy"], function ($, handlebars, server
             $("#screenplay").append(divSceneNext);
         }
 
-        var state = serverProxy.initial()
+        var state = serverProxy.initial();
         var goalSet = serverProxy.satisfiableGoalSet(state.stateId);
 
         var divScene = $("<div class=\"scene\"></div>");
@@ -65,7 +65,7 @@ require(["jquery", "handlebars", "serverProxy"], function ($, handlebars, server
                 divPostitSet.children().removeClass("selected");
                 divPostit.addClass("selected");
                 divScene.nextAll().remove();
-                satisfy(state.stateId, goal.goalId, divScene);
+                satisfy(0, goal.goalId, divScene);
             });
             divPostitSet.append(divPostit);
         });

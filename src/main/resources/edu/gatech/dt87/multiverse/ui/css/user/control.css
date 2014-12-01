@@ -1,5 +1,6 @@
 
 .status {
+display: none;
     width: 100%;
     height: 150px;
     position: fixed;

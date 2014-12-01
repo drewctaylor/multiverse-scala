@@ -6,6 +6,7 @@ state {
         denouement := false
         life := "alive"
         role := "hermit"
+        gender := "male"
     }
 
     characterGoal bebeGoal {
@@ -21,6 +22,7 @@ state {
         denouement := false
         life := "alive"
         role := "knight"
+        gender := "male"
     }
 
     characterGoal lancelotGoal {
@@ -66,7 +68,7 @@ goal denouementCharacter(character c) {
 
         c.role := "hermit"
 
-        "{{c.name}} abandoned his sword and became a {{c.role}}."
+        "{{c.name}} abandoned {{c.det}} sword and became a {{c.role}}."
     }
 
     strategy {
@@ -78,7 +80,7 @@ goal denouementCharacter(character c) {
 
         c.role := "knight"
 
-        "{{c.name}} abandoned his vows and became a {{c.role}}."
+        "{{c.name}} abandoned {{c.det}} vows and became a {{c.role}}."
     }
 
     strategy {
@@ -90,7 +92,7 @@ goal denouementCharacter(character c) {
 
         c.role := "princess"
 
-        "{{c.name}} abandoned her vows and became a {{c.role}}."
+        "{{c.name}} abandoned {{c.det}} vows and became a {{c.role}}."
     }
 
     strategy {
@@ -102,7 +104,7 @@ goal denouementCharacter(character c) {
 
         c.role := "nun"
 
-        "{{c.name}} abandoned her crown and became a {{c.role}}."
+        "{{c.name}} abandoned {{c.det}} crown and became a {{c.role}}."
     }
 
     strategy {
@@ -124,7 +126,7 @@ goal denouementCharacter(character c) {
             c.role == "hermit" &&
             g.status == "success"
 
-        "{{c.name}} renewed his vows and remained a {{c.role}}."
+        "{{c.name}} renewed {{c.det}} vows and remained a {{c.role}}."
     }
 
     strategy {
@@ -134,7 +136,7 @@ goal denouementCharacter(character c) {
             c.role == "nun" &&
             g.status == "success"
 
-        "{{c.name}} renewed her vows and remained a {{c.role}}."
+        "{{c.name}} renewed {{c.det}} vows and remained a {{c.role}}."
     }
 
     strategy {

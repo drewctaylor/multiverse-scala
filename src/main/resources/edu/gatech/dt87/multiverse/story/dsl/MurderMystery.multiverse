@@ -1,4 +1,6 @@
 state {
+    ~ John Smith is a potential victim ~
+
     character john {
         name := "John Smith"
         potentialVictim := true
@@ -8,6 +10,8 @@ state {
         detective := false
         alive := true
     }
+
+    ~ Jerry Fontana is a potential victim ~
 
     character jerry {
         name := "Jerry Fontana"
@@ -83,6 +87,7 @@ state {
         time := "2 am"
         witnesses := false
         potentialMurderLocation := true
+        owner := sherlock
     }
 
     environment park {
@@ -91,6 +96,7 @@ state {
         time := "4 am"
         witnesses := true
         potentialMurderLocation := true
+        ownerName := alleyway.owner.name
     }
 
     environment bar {
@@ -101,16 +107,17 @@ state {
         potentialMurderLocation := false
     }
 
+    john -> gene {
+        friend := 10
+    }
+
     environment shack {
         name := "The Abandoned Shack"
         description := "the remotely located, burned out old shack"
         time := "8 pm"
         witnesses := false
         potentialMurderLocation := true
-    }
-
-    john -> gene {
-        friend := 10
+        meeting := (john->gene).friend
     }
 
     john -> jerry {
@@ -184,13 +191,21 @@ state {
     shack -> docks {
         nearbyLocation := 0
     }
+
+    shack <-> docks {
+        adjacent := true
+    }
 }
 
-goal story() {
+
+goal murderMystery() {
     strategy {
         character victim !?= victim.potentialVictim == true && victim.alive == true
 
         "<div class='action'>No more victims to kill! The End!</div>"
+
+true == false
+
     }
 
     strategy {
@@ -210,6 +225,7 @@ goal story() {
 
         "<div class='action'>The End! Let's tell another Murder Mystery!</div>"
     }
+
 }
 
 goal findVictim(character victim) {
@@ -240,7 +256,7 @@ goal findDetective(character detective) {
         crime c ?= c.active == true
         c.detectiveName := detective.name
 
-        "<div class='action'>Cut to a quiet single bedroom apartment. The shrill ring of a phone awakens {{detective.name}} from a deep and
+        "<div class='action'>Cut to a quiet single bedroom apartment. The shrill ring of a phone awakens {{detective.name}}, {{detective.age}} from a deep and
          relentless slumber.  {{detective.sub}} slowly opens his eyes, and knows exactly what the call brings. He accepts his fate
          quickly, picks up the phone, and gathers the details about his new case. Once the call is finished, he gathers
          is things, jumps in the car, and heads to the crime scene.</div>"

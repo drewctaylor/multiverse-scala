@@ -1,0 +1,314 @@
+state {
+    characterGoal child {
+      value := true
+    }
+  
+    character amanda {
+        mother := none
+        father := character palmer {
+            mother := empty
+            father := empty
+            life := "alive"
+            first := "Palmer"
+            last := "Woodward"
+            gender := "male"
+            orientation := "female"
+            age := "elder adult"
+        }
+        life := "alive"
+        first := "Amanda"
+        last := "Woodward"
+        gender := "female"
+        orientation := "male"
+        age := "young adult"
+        goal := child
+    }
+
+    character alison {
+        life := "alive"
+        first := "Alison"
+        last := "Parker"
+        gender := "female"
+        orientation := "male"
+        age := 30
+        goal := empty
+    }
+    character jane {
+        life := "alive"
+        first := "Jane"
+        last := "Andrews"
+        gender := "female"
+        orientation := "male"
+        age := 30
+        goal := ()
+    }
+    character jake {
+        life := "alive"
+        first := "Jake"
+        last := "Hanson"
+        gender := "male"
+        orientation := "male" + "female"
+        age := 30
+        goal := ()
+    }
+    character billy {
+        life := "alive"
+        first := "Billy"
+        last := "Campbell"
+        gender := "male"
+        orientation := "female"
+        age := 30
+        goal := ()
+    }
+    character matt {
+        life := "alive"
+        first := "Matt"
+        last := "Fielding"
+        gender := "male"
+        orientation := "male"
+        age := 30
+        goal := ()
+    }
+    character peter {
+        life := "alive"
+        first := "Peter"
+        last := "Burns"
+        gender := "male"
+        orientation := "female"
+        age := 30
+        goal := ()
+    }
+    character michael {
+        life := "alive"
+        first := "Michael"
+        last := "Mancini"
+        gender := "male"
+        orientation := "female"
+        age := 30
+        goal := ()
+    }
+    character sydney {
+        life := "alive"
+        first := "Sydney"
+        last := "Andrews"
+        gender := "female"
+        orientation := "male" + "female"
+        age := 30
+        goal := ()
+    }
+    character kimberly {
+        life := "alive"
+        first := "Kimberly"
+        last := "Shaw"
+        gender := "female"
+        orientation := "male" + "female"
+        age := 30
+        goal := ()
+    }
+    character palmer {
+        life := "alive"
+        first := "Palmer"
+        last := "Woodward"
+        gender := "male"
+        orientation := "female"
+        age := "60"
+        goal := ()
+    }
+
+    amanda <-> billy {
+        marriage := true
+    }
+
+    amanda -> billy {
+      attitude := "favor"
+    }
+
+    billy -> amanda {
+      attitude := "disfavor"
+    }
+
+    sydney <-> jane {
+      family := true
+    }
+}
+
+goal story2() "Story 2" {
+    strategy {
+        character c1 ?= c1.first == "Amanda"
+
+        characterGoal child {
+            test := "yo"
+        }
+
+        c1.goal := child
+
+        "{{c1.goal}}"
+    }
+}
+
+goal story() "Story" {
+  strategy {
+    character p1 ?= p1.life == "alive"
+
+    motivateParenthood(p1)
+    thwartParenthood(p1)
+    unthwartParenthood(p1)
+  }
+}
+
+
+goal motivateParenthood(character p1) "Motivate Parenthood" {
+  strategy "Parenthood Fulfullment" {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      (p1->p2).attitude == "favor" &&
+      (p2->p1).attitude == "favor"
+
+    p1.goal += "child"
+    p2.goal += "child"
+
+    "
+    {{p1.first}} and {{p2.first}}, very much in love, wish to have a child.
+    "
+  }
+  strategy "Parenthood Desperation" {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      (p1->p2).attitude == "favor" &&
+      (p2->p1).attitude == "disfavor"
+
+    p1.goal += "child"
+
+    "
+    {{p1.first}}, believing that {{p2.first}} no longer loves {{p1.obj}},
+    wishes to have a child, believing that it will restore {{p2.det}} affection for
+    {{p1.obj}}, or at least ensure that {{p2.sub}} remains with {{p1.obj}}.
+    "
+  }
+  strategy "Parenthood Health" {
+    character p2 ?= (p2<->p1).family && p2.goal superset "health"
+
+    p1.goal += child
+
+    "
+    {{p2.first}} suffers from a terrible illness, but a transplant might save {{p2.obj}}. {{p1.first}} is not a match,
+    but {{p1.first}} may be able to have a child who would be.
+    "
+  }
+
+  strategy "Parenthood Wealth" {
+    p1.goal += "child"
+
+    "
+    {{p1.first}} learns that if {{p1.sub}} has a child, {{p1.sub}} will
+    inherit a large sum of money from a distant relative.
+    "
+  }
+}
+
+goal thwartParenthood(character p1) "Thwart Parenthood" {
+  strategy {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      p1.goal ] "child" &&
+      p2.goal ] "child"
+
+    (p1<->p2).fertility := false
+
+    "
+    {{p1.first}} and {{p2.first}} learn that they are infertile.
+    "
+  }
+  strategy {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      p1.goal ] "child" &&
+      p2.goal ] "child"
+
+    p1.fertility := false
+
+    "
+    {{p1.first}} and {{p2.first}} learn that {{p1.first}} is infertile.
+    "
+  }
+  strategy {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      p1.goal ] "child" &&
+      p2.goal ] "child"
+
+    p1.location := "elsewhere"
+    p2.location := "here"
+
+    "
+    {{p1.first}} learns that {{p1.sub}} must leave the country, preventing
+    {{p1.first}} and {{p2.first}} from having a child.
+    "
+  }
+  strategy {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      p1.goal ] "child" &&
+      p2.goal ] "child"
+
+    p1.life := "dead"
+
+    "
+    {{p1.first}} dies, preventing {{p2.first}} from having a child.
+    "
+  }
+  strategy {
+    character p2 ?=
+      (p1<->p2).marriage &&
+      p1.goal superset "child" &&
+      p2.goal superset "child"
+
+    p1.wealth := "very poor"
+    p2.wealth := "very poor"
+
+    "
+    {{p1.first}} and {{p2.first}} cannot afford a child.
+    "
+  }
+  strategy {
+    "
+    Nope."
+
+  }
+}
+
+goal unthwartParenthood(character p1) "Unthwart Parenthood" {
+  strategy "This is a test" {
+    "
+    Although {{p1.first}} is infertile, {{p2.first}} is not, and {{p1.first}} convinces
+    {{p3.first}} to serve as the secret surrogate for {{p1.first}}.
+    "
+  }
+  strategy {
+    "
+    Together, {{p1.first}} and {{p2.first}} contract {{p3.first}} to serve as a surrogate.
+    "
+  }
+  strategy {
+    "
+    Together, {{p1.first}} and {{p2.first}} adopt a child.
+    "
+  }
+  strategy {
+    "
+    {{p3.first}} discovers a technology that will permit {{p1.first}} and {{p2.first}}
+    to have a child, but only at a price.
+    "
+  }
+  strategy {
+    "
+    {{p3.first}} offers to support {{p1.first}} and {{p2.first}} so that they
+    may have a child, but only at a price.
+    "
+  }
+  strategy {
+    "
+    {{p1.first}} pretends that she is pregnant, but in fact she is not!
+    "
+  }
+}
