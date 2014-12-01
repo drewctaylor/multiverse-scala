@@ -1,0 +1,31 @@
+story "Boolean Test" 0
+
+state {
+  input input1 {
+    left := true
+    right := false
+    a := empty
+    o := empty
+    n := empty
+    ord1 := empty
+    ord2 := empty
+  }
+}
+
+goal test() {
+  strategy {
+    input input1 ?= true
+
+    input1.a := input1.left and input1.right
+    input1.o := input1.left or input1.right
+    input1.n := not input1.left
+    input1.ord1 := input1.left or input1.right and input1.left
+
+    "
+    {{input1.left}} and {{input1.right}} = {{input1.a}}<br>
+    {{input1.left}} or {{input1.right}} = {{input1.o}}<br>
+    not {{input1.left}} = {{input1.n}}<br>
+    {{input1.left}} or {{input1.right}} and {{input1.left}} = {{input1.ord1}}<br>
+    "
+  }
+}

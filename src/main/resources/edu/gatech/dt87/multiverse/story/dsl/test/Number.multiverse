@@ -1,0 +1,35 @@
+story "Number Test" 0
+
+state {
+  input input1 {
+    left := 2
+    right := 3
+    d := empty
+    s := empty
+    p := empty
+    q := empty
+    o := empty
+  }
+}
+
+goal test() {
+  strategy {
+    input input1 ?= true
+
+
+    input1.d := input1.left - input1.right
+    input1.s := input1.left + input1.right
+    input1.p := input1.left * input1.right
+    input1.q := input1.left / input1.right
+    input1.o := input1.left + input1.left * input1.right
+
+
+    "
+    {{input1.left}} - {{input1.right}} = {{input1.d}}<br>
+    {{input1.left}} + {{input1.right}} = {{input1.s}}<br>
+    {{input1.left}} * {{input1.right}} = {{input1.p}}<br>
+    {{input1.left}} / {{input1.right}} = {{input1.q}}<br>
+    {{input1.left}} + {{input1.left}} * {{input1.right}} = {{input1.o}}<br>
+    "
+  }
+}
