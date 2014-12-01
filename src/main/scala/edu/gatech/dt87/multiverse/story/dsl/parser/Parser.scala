@@ -142,7 +142,7 @@ class Parser extends TokenParsers with LexerTokens {
 
     lazy val operatorAdditive = lexical.TokenOperatorUnion | lexical.TokenOperatorDifference | lexical.TokenOperatorIntersection | lexical.TokenOperatorAddition | lexical.TokenOperatorSubtraction
 
-    lazy val expressionMultiplicative = expressionUnary ~ rep(operatorAdditive ~ expressionUnary) ^^ {
+    lazy val expressionMultiplicative = expressionUnary ~ rep(operatorMultiplicative ~ expressionUnary) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
