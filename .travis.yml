@@ -4,9 +4,6 @@ script:
 env:
  - PLATFORM=jvm
 scala:
- - 2.11.4
+ - 2.11.2
 jdk:
  - oraclejdk8
- - oraclejdk7
- - openjdk8
- - openjdk7
