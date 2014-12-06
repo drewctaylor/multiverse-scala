@@ -1,12 +1,12 @@
 language: scala
 script:
-	- sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile $PLATFORM/test
+ - sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile $PLATFORM/test
 env:
-	- PLATFORM=jvm
+ - PLATFORM=jvm
 scala:
-	- 2.11.4
+ - 2.11.4
 jdk:
-	- oraclejdk8
-	- oraclejdk7
-	- openjdk8
-	- openjdk7
+ - oraclejdk8
+ - oraclejdk7
+ - openjdk8
+ - openjdk7
