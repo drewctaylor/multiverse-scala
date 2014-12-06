@@ -1,0 +1,90 @@
+story "Nest Test" 0
+
+state {
+
+    character hillary {
+        first  := "Hillary"
+        last   := "Michaels"
+        gender := "female"
+    }
+
+    character palmer {
+        first  := "Palmer"
+        last   := "Woodward"
+        gender := "male"
+    }
+
+    character amanda {
+        first  := "Amanda"
+        last   := "Woodward"
+        gender := "female"
+        mother := hillary
+        father := palmer
+        age := 10
+    }
+
+  ~
+  amanda.mother <-> amanda.father {
+    marriage := true
+  }
+
+  amanda -> amanda.father {
+    affection := true
+  }
+
+  amanda -> amanda.mother {
+    affection := false
+  }
+  ~
+}
+
+goal test() {
+  strategy {
+    character c1, character c2, character c3 ?= c1.mother == c2 && c1.father == c3
+
+    "
+    {{c2.first}} is {{c1.first}}'s mother and {{c3.first}} is {{c1.det}} father.
+    "
+
+    marriageStatement(c2, c3)
+    affectionStatement(c1, c2)
+    affectionStatement(c1, c3)
+  }
+}
+
+goal marriageStatement(character c1, character c2) {
+  strategy {
+    ?= (c1<->c2).marriage
+
+    "
+    {{c1.first}} and {{c2.first}} are married.
+    "
+  }
+
+  strategy {
+    ?= (c1<->c2).marriage == empty
+
+    "
+    {{c1.first}} and {{c2.first}} are not married.
+    "
+  }
+}
+
+
+goal affectionStatement(character c1, character c2) {
+  strategy {
+    ?= (c1->c2).affection
+
+    "
+    {{c1.first}} has affection for {{c2.first}}.
+    "
+  }
+
+  strategy {
+    ?= !(c1->c2).affection
+
+    "
+    {{c1.first}} has no affection for {{c2.first}}.
+    "
+  }
+}

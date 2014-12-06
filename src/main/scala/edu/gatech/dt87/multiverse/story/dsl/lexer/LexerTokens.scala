@@ -2,19 +2,38 @@ package edu.gatech.dt87.multiverse.story.dsl.lexer
 
 import scala.util.parsing.combinator.token.Tokens
 
+/**
+ * Lexer tokens for the multiverse language.
+ */
 trait LexerTokens extends Tokens {
 
+    /**
+     * A token in the multiverse language: a reserved identifier or operator token, a literal string token, a literal 
+     * number token, or an identifier token.
+     */
     sealed abstract class TokenAbstract extends Token
 
+    /**
+     * A reserved assignment operator token.
+     */
     sealed trait TokenOperatorAssignment
 
-    sealed trait TokenOperatorQuery
-
+    /**
+     * A reserved binary operator token.
+     */
     sealed trait TokenOperatorBinary
 
+    /**
+     * A reserved unary operator token.
+     */
     sealed trait TokenOperatorUnary
 
-    class TokenReserved(cs: String*) extends TokenAbstract {
+    /**
+     * A reserved identifier or operator token.
+     *
+     * @param cs a sequence of strings, any one of which represents the reserved identifier or operator token
+     */
+    sealed class TokenReserved(cs: String*) extends TokenAbstract {
         val invalid = cs.filter(!cs.filter(chars =>
             chars.forall(!_.isWhitespace) && (
                 chars.forall(_.isLetter) ||
@@ -23,11 +42,17 @@ trait LexerTokens extends Tokens {
 
         if (invalid.size > 0) throw new RuntimeException( s"""A reserved token must not contain whitespace and must consist of only letters or only punctuation: "${invalid.mkString("\", \"")}".""")
 
+        /**
+         * @return a sequence of strings, any one of which represents the reserved identifier or operator token
+         */
         def charsSeq = cs
 
         def chars = cs.head
     }
 
+    /**
+     * The set of reserved identifier and operator tokens.
+     */
     val tokenReservedSet: Set[TokenReserved] = Set(
         TokenOperatorAnd,
         TokenOperatorOr,
@@ -55,8 +80,9 @@ trait LexerTokens extends Tokens {
         TokenOperatorAssignmentInsert,
         TokenOperatorAssignmentRemove,
         TokenOperatorAssignmentUpdate,
-        TokenOperatorQueryAll,
-        TokenOperatorQueryNone,
+        TokenOperatorQueryQuestionEqual,
+        TokenOperatorQueryQuestion,
+        TokenOperatorQueryEqual,
         TokenKeywordStory,
         TokenKeywordState,
         TokenKeywordEntity,
@@ -74,14 +100,23 @@ trait LexerTokens extends Tokens {
         TokenLiteralBooleanFalse,
         TokenLiteralEmpty)
 
+    /**
+     * A map from a string to the associated reserved operator or identifier token.
+     */
     val tokenReservedMap: Map[String, TokenReserved] = tokenReservedSet.foldLeft(Map[String, TokenReserved]())((map, reserved) => {
         reserved.charsSeq.foldLeft(map)((m, c) => {
             m + (c -> reserved)
         })
     })
 
+    /**
+     * A map from a string to the associated reserved operator.
+     */
     val tokenReservedOperatorMap = tokenReservedMap.filterKeys(_.forall(!_.isLetterOrDigit))
 
+    /**
+     * A map from a string to the associated reserved identifier.
+     */
     val tokenReservedIdentifierMap = tokenReservedMap.filterKeys(_.forall(_.isLetter))
 
     case object TokenOperatorAnd extends TokenReserved("and", "&&") with TokenOperatorBinary
@@ -136,9 +171,11 @@ trait LexerTokens extends Tokens {
 
     case object TokenOperatorAssignmentRemove extends TokenReserved("-=") with TokenOperatorAssignment
 
-    case object TokenOperatorQueryAll extends TokenReserved("?=") with TokenOperatorQuery
+    case object TokenOperatorQueryQuestionEqual extends TokenReserved("?=")
 
-    case object TokenOperatorQueryNone extends TokenReserved("!?=") with TokenOperatorQuery
+    case object TokenOperatorQueryQuestion extends TokenReserved("?")
+
+    case object TokenOperatorQueryEqual extends TokenReserved("=")
 
     case object TokenKeywordBraceLeft extends TokenReserved("{")
 

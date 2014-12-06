@@ -1,89 +1,201 @@
 package edu.gatech.dt87.multiverse.story.dsl.compiler
 
-import edu.gatech.dt87.multiverse.planner.{Strategy, StrategyStep, Event, Goal}
+import edu.gatech.dt87.multiverse.planner.{Goal, Strategy}
+import edu.gatech.dt87.multiverse.story.StateStrategyStep
 import edu.gatech.dt87.multiverse.story.StateStrategyStep._
 import edu.gatech.dt87.multiverse.story.dsl.parser._
-import edu.gatech.dt87.multiverse.story.{StateStrategyStep, State}
-
-import scala.collection.mutable
+import edu.gatech.dt87.multiverse.story.state.State
+import monocle.function._
+import monocle.std._
+import monocle.syntax._
 
 object Compiler {
-    def compile(source: String): Option[(State, Set[Goal[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]])] = {
-        val parser = new Parser()
 
-        parser.phrase(parser.declarationStory)(new parser.lexical.Scanner(source)) match {
+    def sortGenerator(seedOption: Option[LiteralNumber]): Set[StrategyT] => Seq[StrategyT] = {
+        val random = seedOption.map(seed => {
+            seed.value.rounded.toInt
+        }).map(seedInt => {
+            new scala.util.Random(seedInt)
+        }) getOrElse new scala.util.Random()
 
-            case parser.Success(DeclarationStory(title, seed, s, gl), next) =>
+        (set) => {
+            random.shuffle(set.toSeq)
+        }
+    }
 
-                val eventList = s.block.declarationList.foldLeft(List[Event[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]]())((el, d) => d match {
-                    case DeclarationEntity(k, o, ba) =>
-                        el ++ List(StateStrategyStep.eventDeclare(DeclarationEntity(k, o, ba))) ++ ba.assignmentList.map({
-                            case StatementAssignment(ExpressionIdentifierSequence(None, i), right, op) =>
-                                StateStrategyStep.eventAssignment(StatementAssignment(ExpressionIdentifierSequence(Some(o), i), right, op))
-                            case sa =>
-                                StateStrategyStep.eventAssignment(sa)
-                        })
-                    case DeclarationRelationship(o, ba) =>
-                        el ++ ba.assignmentList.map({
-                            case StatementAssignment(ExpressionIdentifierSequence(None, i), right, op) =>
-                                StateStrategyStep.eventAssignment(StatementAssignment(ExpressionIdentifierSequence(Some(o), i), right, op))
-                            case sa =>
-                                StateStrategyStep.eventAssignment(sa)
-                        })
+    def static(declarationStory: DeclarationStory): Option[DeclarationStory] = {
+        val goalList = declarationStory.goalList
+        val goalIdentifierList = goalList.map(goal => {
+            goal.identifier
+        })
+        val goalParameterListSizeMap = goalList.map(goal => {
+            goal.identifier -> goal.parameterList.size
+        }).toMap
+
+        val subgoalList = goalList.map(goal => {
+            goal.strategySet.map(strategy => {
+                strategy.statementList.filter(statement => {
+                    statement.isInstanceOf[StatementSubgoal]
+                }).map(statement => {
+                    statement.asInstanceOf[StatementSubgoal]
                 })
+            }).flatten
+        }).flatten
 
-                val step = eventList.reduce((a: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap], b: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]) => a merge b)
-                val strategy: Strategy[State, SymbolMap, SymbolMap] = Strategy(step)
-                val goalExecution = Goal(strategy).satisfy(State(title.map(_.value), seed.map(_.value.rounded.toInt)), Map())
-                val storyState = goalExecution.successor().get._1
+        val subgoalArgumentListSizeMap = subgoalList.map(subgoal => {
+            subgoal.goal -> subgoal.parameterList.size
+        }).toMap
 
-                var map = mutable.Map[Symbol, Goal[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]]()
-                val goalForGoalSymbol = (gs: Symbol) => map(gs)
-                val declarationFor = (gs: Symbol) => gl.filter(_.identifier.identifier == gs).head
-                val goalForGoalName = (gn: String) => gl.filter((g) => (g.label.map(_.value) getOrElse g.identifier.identifier.name) == gn).head
-                val goalList = gl.map(g => Goal(g.label.map(_.value) getOrElse g.identifier.identifier.name, g.block.strategyList.map(s => {
-                    val eventList = s.block.statementList.map({
-                        case s: StatementQuery => StateStrategyStep.eventQuery(s)
-                        case s: StatementSubgoal => StateStrategyStep.eventSubgoal(s, goalForGoalSymbol, declarationFor)
-                        case s: StatementNarration => StateStrategyStep.eventNarration(s)
-                        case s: StatementAssignment => StateStrategyStep.eventAssignment(s)
-                        case StatementDeclarationData(DeclarationEntity(k, o, ba)) =>
-                            (List(StateStrategyStep.eventDeclare(DeclarationEntity(k, o, ba))) ++ ba.assignmentList.map({
-                                case StatementAssignment(ExpressionIdentifierSequence(None, i), right, op) =>
-                                    StateStrategyStep.eventAssignment(StatementAssignment(ExpressionIdentifierSequence(Some(o), i), right, op))
-                                case sa =>
-                                    StateStrategyStep.eventAssignment(sa)
-                            })).reduce((a: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap], b: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]) => {
-                                a merge b
-                            })
-                        case StatementDeclarationData(DeclarationRelationship(o, ba)) => ba.assignmentList.map({
-                            case StatementAssignment(ExpressionIdentifierSequence(None, i), right, op) =>
-                                StateStrategyStep.eventAssignment(StatementAssignment(ExpressionIdentifierSequence(Some(o), i), right, op))
-                            case sa =>
-                                StateStrategyStep.eventAssignment(sa)
-                        }).reduce((a: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap], b: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]) => {
-                            a merge b
+        val subgoalMustReferenceGoal = subgoalList.foldLeft(List[String]())((messageList, subgoal) => {
+            if (goalIdentifierList.contains(subgoal.goal)) {
+                messageList
+            } else {
+                messageList :+ s"""The identifier "${subgoal.goal.name}" does not reference a goal."""
+            }
+        })
+
+        val subgoalArgumentListSizeMustMatchGoalParameterListSize = subgoalList.foldLeft(List[String]())((messageList, subgoal) => {
+            goalParameterListSizeMap.get(subgoal.goal) match {
+                case Some(i) => {
+                    if (i == subgoalArgumentListSizeMap(subgoal.goal)) {
+                        messageList
+                    } else {
+                        messageList :+ s"""The length of the argument list does not match the length of the parameter list of the goal "${subgoal.goal.name}"; it is ${subgoalArgumentListSizeMap(subgoal.goal)}, but it should be $i."""
+                    }
+                }
+                case None => messageList
+            }
+        })
+
+        val messageList = subgoalMustReferenceGoal ++ subgoalArgumentListSizeMustMatchGoalParameterListSize
+
+        if (messageList.size == 0) {
+
+            Some(declarationStory)
+
+        } else {
+
+            messageList.map(message => {
+                println(message)
+            })
+
+            None
+        }
+    }
+
+    def compile(source: String): Option[(State, Set[GoalT])] = {
+        Parser.phrase(Parser.unit)(new Parser.lexical.Scanner(source)) match {
+
+            case Parser.Success(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList), next) =>
+
+                if (static(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList)).isDefined) {
+
+                    val sort = sortGenerator(seedOption)
+
+                    val strategyStepListOption = stateDeclarationOption.map(stateDeclaration => {
+                        stateDeclaration.assignmentList.map(assignment => {
+                            StateStrategyStep.bind(assignment)
+                        }) ++ stateDeclaration.assignmentList.map(assignment => {
+                            StateStrategyStep.assign(assignment)
                         })
-                    }).reduce((a: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap], b: StrategyStep[State, StateStrategyStep.SymbolMap, StateStrategyStep.SymbolMap]) => {
-                        a merge b
                     })
 
-                    if (s.label.isDefined)
-                        Strategy(s.label.get.value, eventList)
-                    else
-                        Strategy(eventList)
-                }).toSeq: _*))
+                    val stateStrategyStepOption = strategyStepListOption.map(stateEventList => {
+                        stateEventList.reduce((a: StrategyStepT, b: StrategyStepT) => {
+                            a.merge(b)
+                        })
+                    })
 
-                goalList.map((g) => goalForGoalName(g.label).identifier.identifier -> g).map(map += _)
+                    val stateStrategyOption = stateStrategyStepOption.map(stateStrategyStep => {
+                        Strategy(stateStrategyStep)
+                    })
 
-                val top = goalList.filter((g) => declarationFor(goalForGoalName(g.label).identifier.identifier).parameterList.isEmpty)
+                    val stateGoalOption = stateStrategyOption.map(stateStrategy => {
+                        Goal(sort, Seq(stateStrategy))
+                    })
 
-                Some(storyState, top.toSet)
+                    val state = if(titleOption.isDefined) {
+                        State(Some(titleOption.get.value))
+                    } else {
+                        State()
+                    }
 
-            case o =>
-                println(o)
+                    val stateGoalExecutionOption = stateGoalOption.map(stateGoal => {
+                        stateGoal.satisfy(state, Map[Symbol, (Symbol, Int)]())
+                    })
+
+                    val stateOption = stateGoalExecutionOption.map(stateGoalExecution => {
+                        stateGoalExecution.successor()
+                    }).flatten
+
+                    lazy val goalFor: Symbol => (Goal[State, SymbolMap, SymbolMap], DeclarationGoal) = (symbol) => {
+                        goalList.filter(tuple => tuple._2.identifier == symbol).head
+                    }
+
+                    lazy val goalList = goalDeclarationList.map(goalDeclaration => {
+                        if(goalDeclaration.label.isDefined) {
+                            (Goal(goalDeclaration.label.get.value, sort, goalDeclaration.strategySet.map(strategyDeclaration => {
+                                val strategyStepList = strategyDeclaration.statementList.filter(statement => {
+                                    statement.isInstanceOf[StatementAssignmentQualified]
+                                }).map(assignment => {
+                                    StateStrategyStep.bind(assignment.asInstanceOf[StatementAssignmentQualified])
+                                }) ++ strategyDeclaration.statementList.map({
+                                    case s: StatementAssignmentQualified => StateStrategyStep.assign(s)
+                                    case s: StatementNarration => StateStrategyStep.narrate(s)
+                                    case s: StatementSubgoal => StateStrategyStep.subgoal(s, goalFor)
+                                    case s: StatementQuery => StateStrategyStep.query(s)
+                                })
+
+                                val strategyStep = strategyStepList.reduce((a: StrategyStepT, b: StrategyStepT) => {
+                                    a.merge(b)
+                                })
+
+                                strategyDeclaration.label match {
+                                    case Some(LiteralString(label)) => Strategy(label, strategyStep)
+                                    case _ => Strategy(strategyStep)
+                                }
+                            }).toSeq), goalDeclaration)
+                        } else {
+                            (Goal(sort, goalDeclaration.strategySet.map(strategyDeclaration => {
+                                val strategyStepList = strategyDeclaration.statementList.filter(statement => {
+                                    statement.isInstanceOf[StatementAssignmentQualified]
+                                }).map(assignment => {
+                                    StateStrategyStep.bind(assignment.asInstanceOf[StatementAssignmentQualified])
+                                }) ++ strategyDeclaration.statementList.map({
+                                    case s: StatementAssignmentQualified => StateStrategyStep.assign(s)
+                                    case s: StatementNarration => StateStrategyStep.narrate(s)
+                                    case s: StatementSubgoal => StateStrategyStep.subgoal(s, goalFor)
+                                    case s: StatementQuery => StateStrategyStep.query(s)
+                                })
+
+                                val strategyStep = strategyStepList.reduce((a: StrategyStepT, b: StrategyStepT) => {
+                                    a.merge(b)
+                                })
+
+                                strategyDeclaration.label match {
+                                    case Some(LiteralString(label)) => Strategy(label, strategyStep)
+                                    case _ => Strategy(strategyStep)
+                                }
+                            }).toSeq), goalDeclaration)
+
+                        }
+                    })
+
+                    if(stateOption.isDefined) {
+                        Some(stateOption.get._1, goalList.filter(_._2.parameterList.size == 0).map(_._1).toSet)
+                    } else {
+                        Some(State(), goalList.filter(_._2.parameterList.size == 0).map(_._1).toSet)
+                    }
+
+                } else {
+                    None
+                }
+
+            case Parser.NoSuccess(message, next) =>
+                println(message, next.pos)
                 None
 
         }
     }
+
 }

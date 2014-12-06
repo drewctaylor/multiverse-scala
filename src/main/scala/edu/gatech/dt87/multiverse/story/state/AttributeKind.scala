@@ -1,4 +1,4 @@
-package edu.gatech.dt87.multiverse.story
+package edu.gatech.dt87.multiverse.story.state
 
 sealed trait AttributeKind
 

@@ -1,7 +1,5 @@
 package edu.gatech.dt87.multiverse.planner
 
-import edu.gatech.dt87.multiverse.random.Random
-
 /**
  * A goal is a set of strategies, any one of which may achieve the goal.
  *
@@ -40,7 +38,7 @@ trait Goal[S, X, Y] {
  * @tparam X the goal input type
  * @tparam Y the goal output type
  */
-case class GoalImplementation[S, X, Y](label: String, strategySet: Set[Strategy[S, X, Y]]) extends Goal[S, X, Y] {
+case class GoalImplementation[S, X, Y](label: String, strategySet: Set[Strategy[S, X, Y]], sort: Set[Strategy[S, X, Y]] => Seq[Strategy[S, X, Y]]) extends Goal[S, X, Y] {
 
     /**
      * Given a state and a goal input, return a description of the effort of the planner to achieve that goal.
@@ -50,7 +48,7 @@ case class GoalImplementation[S, X, Y](label: String, strategySet: Set[Strategy[
      * @return the description of the effort of the planner to achieve the goal
      */
     def satisfy(state: S, input: X): GoalExecution[S, X, Y] = {
-        Random.shuffle(strategySet.toSeq).foldLeft[GoalExecution[S, X, Y]](GoalExecution[S, X, Y](this, input))((goalExecution, strategy) => {
+        sort(strategySet).foldLeft[GoalExecution[S, X, Y]](GoalExecution[S, X, Y](this, input))((goalExecution, strategy) => {
             if (goalExecution.successor().isDefined) {
                 goalExecution
             } else {
@@ -76,8 +74,8 @@ object Goal {
      * @tparam Y the goal output type
      * @return the goal
      */
-    def apply[S, X, Y](label: String, strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
-        GoalImplementation[S, X, Y](label, strategySequence.toSet)
+    def apply[S, X, Y](label: String, sort: Set[Strategy[S, X, Y]] => Seq[Strategy[S, X, Y]], strategySequence: Seq[Strategy[S, X, Y]]): Goal[S, X, Y] = {
+        GoalImplementation[S, X, Y](label, strategySequence.toSet, sort)
     }
 
     /**
@@ -89,8 +87,8 @@ object Goal {
      * @tparam Y the goal output type
      * @return the goal
      */
-    def apply[S, X, Y](strategySequence: Strategy[S, X, Y]*): Goal[S, X, Y] = {
-        GoalImplementation[S, X, Y](s"Unlabeled Goal ${iterator.next()}", strategySequence.toSet)
+    def apply[S, X, Y](sort: Set[Strategy[S, X, Y]] => Seq[Strategy[S, X, Y]], strategySequence: Seq[Strategy[S, X, Y]]): Goal[S, X, Y] = {
+        GoalImplementation[S, X, Y](s"Unlabeled Goal ${iterator.next()}", strategySequence.toSet, sort)
     }
 }
 

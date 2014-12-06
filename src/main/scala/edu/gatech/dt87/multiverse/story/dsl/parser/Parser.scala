@@ -1,229 +1,387 @@
 package edu.gatech.dt87.multiverse.story.dsl.parser
 
-import edu.gatech.dt87.multiverse.planner.{Event, Goal, Strategy, StrategyStep}
-import edu.gatech.dt87.multiverse.story.StateStrategyStep.SymbolMap
 import edu.gatech.dt87.multiverse.story.dsl.lexer._
-import edu.gatech.dt87.multiverse.story.{State, StateStrategyStep}
 
-import scala.collection.mutable
 import scala.util.parsing.combinator.syntactical.TokenParsers
 
-class Parser extends TokenParsers with LexerTokens {
+object Parser extends TokenParsers with LexerTokens {
     type Tokens = Lexer
     val lexical: Tokens = new Lexer()
 
-    lazy val declarationStory = opt(lexical.TokenKeywordStory ~ expressionString ~ opt(expressionNumber)) ~ declarationState ~ rep(declarationGoal) ^^ {
-        case None ~ s ~ gl => DeclarationStory(None, None, s, gl)
+    /**
+     * A parser that matches a compilation unit: an optional story statement, followed by an optional state declaration, followed by a sequence of goal declarations.
+     */
+    lazy val unit = opt(lexical.TokenKeywordStory ~ literalString ~ opt(literalNumber)) ~ opt(stateDeclaration) ~ rep(goalDeclaration) ^^ {
         case Some(_ ~ t ~ n) ~ s ~ gl => DeclarationStory(Some(t), n, s, gl)
+        case None ~ s ~ gl => DeclarationStory(None, None, s, gl)
     }
 
-    lazy val declarationGoal: Parser[DeclarationGoal] = lexical.TokenKeywordGoal ~ expressionIdentifier ~ lexical.TokenKeywordParenthesesLeft ~ opt(declarationParameterList) ~ lexical.TokenKeywordParenthesesRight ~ opt(expressionString) ~ blockGoal ^^ {
-        case _ ~ i ~ _ ~ None ~ _ ~ s ~ b => DeclarationGoal(i, s, List(), b)
-        case _ ~ i ~ _ ~ Some(l) ~ _ ~ s ~ b => DeclarationGoal(i, s, l, b)
+    /**
+     * A parser that matches a state declaration.
+     */
+    lazy val stateDeclaration: Parser[DeclarationState] = lexical.TokenKeywordState ~ stateBlock ^^ {
+        case _ ~ sl => DeclarationState(sl)
     }
 
-    lazy val blockGoal: Parser[BlockGoal] = lexical.TokenKeywordBraceLeft ~ rep(declarationStrategy) ~ lexical.TokenKeywordBraceRight ^^ {
-        case _ ~ l ~ _ => BlockGoal(l)
+    /**
+     * A parser that matches a state block.
+     */
+    lazy val stateBlock: Parser[List[StatementAssignmentQualified]] = lexical.TokenKeywordBraceLeft ~ rep(statementAssignmentQualifiedList) ~ lexical.TokenKeywordBraceRight ^^ {
+        case _ ~ sll ~ _ => sll.flatten
     }
 
-    lazy val declarationStrategy: Parser[DeclarationStrategy] = lexical.TokenKeywordStrategy ~ opt(expressionString) ~ blockStrategy ^^ {
-        case _ ~ l ~ b => DeclarationStrategy(l, b)
-    }
-
-    lazy val blockStrategy: Parser[BlockStrategy] = lexical.TokenKeywordBraceLeft ~ rep(statementSubgoal | statementQuery | statementAssignment | statementNarration | statementDeclarationData) ~ lexical.TokenKeywordBraceRight ^^ {
-        case _ ~ s ~ _ => BlockStrategy(s)
-    }
-
-    lazy val statementDeclarationData: Parser[StatementDeclarationData] = (declarationEntity | declarationRelationship) ^^ {
-        case d => StatementDeclarationData(d)
-    }
-
-    lazy val declarationParameterList: Parser[List[DeclarationParameter]] = declarationParameter ~ rep(lexical.TokenKeywordComma ~ declarationParameter) ^^ {
-        case dl ~ dList => dList.foldLeft(List(dl))((declarationParameter, operationDeclarationParameter) => operationDeclarationParameter match {
-            case _ ~ dr => declarationParameter :+ dr
+    /**
+     * A parser that matches an argument list.
+     */
+    lazy val argumentList: Parser[List[IdentifierAttributeQualified]] = identifierQualified ~ rep(lexical.TokenKeywordComma ~ identifierQualified) ^^ {
+        case al ~ aList => aList.foldLeft(List(al))((parameterList, parameter) => parameter match {
+            case _ ~ ar => parameterList :+ ar
         })
     }
 
-    lazy val declarationParameter: Parser[DeclarationParameter] = expressionIdentifier ~ expressionIdentifier ^^ {
-        case e ~ i => DeclarationParameter(e, i)
-    }
-
-    lazy val declarationState: Parser[DeclarationState] = lexical.TokenKeywordState ~ blockState ^^ {
-        case _ ~ b => DeclarationState(b)
-    }
-
-    lazy val blockState: Parser[BlockState] = lexical.TokenKeywordBraceLeft ~ rep(declarationEntity | declarationRelationship) ~ lexical.TokenKeywordBraceRight ^^ {
-        case _ ~ d ~ _ => BlockState(d)
-    }
-
-    lazy val declarationRelationship: Parser[DeclarationRelationship] = expressionRelationship ~ blockAssignment ^^ {
-        case i ~ b => DeclarationRelationship(i, b)
-    }
-
-    lazy val declarationEntity: Parser[DeclarationEntity] = expressionIdentifier ~ expressionIdentifier ~ blockAssignment ^^ {
-        case k ~ i ~ b => DeclarationEntity(k, ExpressionEntity(i), b)
-    }
-
-    lazy val blockLiteral: Parser[BlockLiteral] = lexical.TokenKeywordBraceLeft ~ expressionString ~ rep(lexical.TokenKeywordComma ~ expressionString) ~ lexical.TokenKeywordBraceRight ^^ {
-        case _ ~ el ~ eList ~ _ => BlockLiteral(eList.foldLeft(List(el))((symbol, operationSymbol) => operationSymbol match {
-            case _ ~ er => symbol :+ er
-        }))
-    }
-
-    lazy val blockAssignment: Parser[BlockAssignment] = lexical.TokenKeywordBraceLeft ~ rep(statementAssignmentContextual) ~ lexical.TokenKeywordBraceRight ^^ {
-        case _ ~ el ~ _ => BlockAssignment(el)
-    }
-
-    lazy val statementSubgoal: Parser[StatementSubgoal] = expressionIdentifier ~ lexical.TokenKeywordParenthesesLeft ~ opt(parameterList) ~ lexical.TokenKeywordParenthesesRight ^^ {
-        case i ~ _ ~ Some(p) ~ _ => StatementSubgoal(i, p)
-        case i ~ _ ~ None ~ _ => StatementSubgoal(i, List())
-    }
-
-    lazy val parameterList: Parser[List[ExpressionIdentifier]] = expressionIdentifier ~ rep(lexical.TokenKeywordComma ~ expressionIdentifier) ^^ {
-        case pl ~ pList => pList.foldLeft(List[ExpressionIdentifier](pl))((parameterList, parameter) => parameter match {
-            case _ ~ pr => parameterList :+ pr
+    /**
+     * A parser that matches a parameter list.
+     */
+    lazy val parameterList: Parser[List[(Symbol, Symbol)]] = identifierPart ~ identifierPart ~ rep(lexical.TokenKeywordComma ~ identifierPart ~ identifierPart) ^^ {
+        case k ~ i ~ pList => pList.foldLeft(List((k, i)))((parameterList, parameter) => parameter match {
+            case _ ~ kl ~ il => parameterList :+(kl, il)
         })
     }
 
-    lazy val statementNarration: Parser[StatementNarration] = expressionString ^^ {
-        case e => StatementNarration(e)
+    /**
+     * A parser that matches a goal declaration.
+     */
+    lazy val goalDeclaration: Parser[DeclarationGoal] = lexical.TokenKeywordGoal ~ identifierPart ~ lexical.TokenKeywordParenthesesLeft ~ opt(parameterList) ~ lexical.TokenKeywordParenthesesRight ~ opt(literalString) ~ goalBlock ^^ {
+        case _ ~ i ~ _ ~ None ~ _ ~ l ~ ss => DeclarationGoal(i, l, List(), ss)
+        case _ ~ i ~ _ ~ Some(pl) ~ _ ~ l ~ ss => DeclarationGoal(i, l, pl, ss)
     }
 
-    lazy val statementQuery = opt(declarationParameterList) ~ operatorQuery ~ expression ^^ {
-        case Some(el) ~ (op: lexical.TokenOperatorQuery) ~ er => StatementQuery(el, er, operatorQueryMap(op))
-        case None ~ (op: lexical.TokenOperatorQuery) ~ er => StatementQuery(List(), er, operatorQueryMap(op))
+    /**
+     * A parser that matches a goal block.
+     */
+    lazy val goalBlock: Parser[Set[DeclarationStrategy]] = lexical.TokenKeywordBraceLeft ~ rep(strategyDeclaration) ~ lexical.TokenKeywordBraceRight ^^ {
+        case _ ~ sl ~ _ => sl.toSet
     }
 
-    lazy val operatorQuery = lexical.TokenOperatorQueryAll | lexical.TokenOperatorQueryNone
-
-    lazy val statementAssignment = expressionIdentifierSequence ~ operatorAssignment ~ expression ^^ {
-        case el ~ (op: lexical.TokenOperatorAssignment) ~ er => StatementAssignment(el, er, operatorAssignmentMap(op))
+    /**
+     * A parser that matches a strategy declaration.
+     */
+    lazy val strategyDeclaration: Parser[DeclarationStrategy] = lexical.TokenKeywordStrategy ~ opt(literalString) ~ strategyBlock ^^ {
+        case _ ~ l ~ sl => DeclarationStrategy(l, sl)
     }
 
-    lazy val statementAssignmentContextual = expressionIdentifier ~ operatorAssignment ~ expression ^^ {
-        case el ~ (op: lexical.TokenOperatorAssignment) ~ er => StatementAssignment(ExpressionIdentifierSequence(None, Seq(el)), er, operatorAssignmentMap(op))
+    /**
+     * A parser that matches a strategy block.
+     */
+    lazy val strategyBlock: Parser[List[Statement]] = lexical.TokenKeywordBraceLeft ~ rep(statementSubgoal | statementQuery | statementAssignmentQualifiedList | statementNarration) ~ lexical.TokenKeywordBraceRight ^^ {
+        case _ ~ sll ~ _ => sll.flatten
     }
 
-    lazy val operatorAssignment = lexical.TokenOperatorAssignmentUpdate | lexical.TokenOperatorAssignmentInsert | lexical.TokenOperatorAssignmentRemove
+    /**
+     * A parser that matches a subgoal statement.
+     */
+    lazy val statementSubgoal: Parser[List[StatementSubgoal]] = identifierPart ~ lexical.TokenKeywordParenthesesLeft ~ opt(argumentList) ~ lexical.TokenKeywordParenthesesRight ^^ {
+        case i ~ _ ~ Some(p) ~ _ => List(StatementSubgoal(i, p))
+        case i ~ _ ~ None ~ _ => List(StatementSubgoal(i, List()))
+    }
 
-    lazy val expression = expressionConditionalAnd ~ rep(lexical.TokenOperatorOr ~ expressionConditionalAnd) ^^ {
+    /**
+     * A parser that matches a narration statement.
+     */
+    lazy val statementNarration: Parser[List[StatementNarration]] = literalString ^^ {
+        case e => List(StatementNarration(e))
+    }
+
+    /**
+     * A parser that matches a query statement.
+     */
+    lazy val statementQuery: Parser[List[StatementQuery]] = opt(parameterList) ~ lexical.TokenOperatorQueryQuestionEqual ~ expression ^^ {
+        case Some(pl) ~ _ ~ e => List(StatementQuery(pl, None, Some(e)))
+        case None ~ _ ~ e => List(StatementQuery(List(), None, Some(e)))
+
+    } | opt(parameterList) ~ lexical.TokenOperatorQueryQuestion ~ expression ~ opt(lexical.TokenOperatorQueryEqual ~ expression) ^^ {
+        case Some(pl) ~ _ ~ ea ~ Some(_ ~ ee) => List(StatementQuery(pl, Some(ea), Some(ee)))
+        case None ~ _ ~ ea ~ Some(_ ~ ee) => List(StatementQuery(List(), Some(ea), Some(ee)))
+        case Some(pl) ~ _ ~ ea ~ None => List(StatementQuery(pl, Some(ea), None))
+        case None ~ _ ~ ea ~ None => List(StatementQuery(List(), Some(ea), None))
+    }
+
+    /**
+     * A parser that matches a block of qualified asssignment statements.
+     */
+    lazy val statementAssignmentQualifiedList: Parser[List[StatementAssignmentQualified]] = statementAssignmentEntity | statementAssignmentRelationship | statementAssignmentQualified
+
+    /**
+     * A parser that matches a qualified assignment statement.
+     */
+    lazy val statementAssignmentQualified: Parser[List[StatementAssignmentQualified]] = identifierQualified ~ operatorAssignment ~ expression ^^ {
+        case i ~ (op: lexical.TokenOperatorAssignment) ~ e => List(StatementAssignmentQualified(i, e, operatorAssignmentMap(op)))
+    }
+
+    /**
+     * A parser that matches a relationship declaration.
+     */
+    lazy val statementAssignmentRelationship: Parser[List[StatementAssignmentQualified]] = identifierRelationship ~ statementAssignmentUnqualifiedBlock ^^ {
+        case i ~ sl => sl.map(s => StatementAssignmentQualified(IdentifierAttributeQualified(i, s.left.symbolSequence), s.right, s.op))
+    }
+
+    /**
+     * A parser that matches an entity declaration.
+     */
+    lazy val statementAssignmentEntity: Parser[List[StatementAssignmentQualified]] = identifierPart ~ identifierPart ~ statementAssignmentUnqualifiedBlock ^^ {
+        case k ~ i ~ sl => sl.map(s => StatementAssignmentQualified(IdentifierAttributeQualified(IdentifierEntity(Some(k), i), s.left.symbolSequence), s.right, s.op))
+    }
+
+    /**
+     * A parser that matches a block of unqualified assignment statements.
+     */
+    lazy val statementAssignmentUnqualifiedBlock: Parser[List[StatementAssignmentUnqualified]] = lexical.TokenKeywordBraceLeft ~ rep(statementAssignmentUnqualified) ~ lexical.TokenKeywordBraceRight ^^ {
+        case _ ~ sl ~ _ => sl
+    }
+
+    /**
+     * A parser that matches an unqualified assignment statement.
+     */
+    lazy val statementAssignmentUnqualified: Parser[StatementAssignmentUnqualified] = identifierUnqualified ~ operatorAssignment ~ expression ^^ {
+        case i ~ (op: lexical.TokenOperatorAssignment) ~ e => StatementAssignmentUnqualified(i, e, operatorAssignmentMap(op))
+    }
+
+    /**
+     * A parser that matches an assignment operator.
+     */
+    lazy val operatorAssignment: Parser[Elem] = lexical.TokenOperatorAssignmentUpdate | lexical.TokenOperatorAssignmentInsert | lexical.TokenOperatorAssignmentRemove
+
+    /**
+     * A parser that matches a boolean or expression.
+     */
+    lazy val expression: Parser[Expression] = expressionConditionalAnd ~ rep(lexical.TokenOperatorOr ~ expressionConditionalAnd) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
     }
 
-    lazy val expressionConditionalAnd = expressionEquality ~ rep(lexical.TokenOperatorAnd ~ expressionEquality) ^^ {
+    /**
+     * A parser that matches a boolean and expression.
+     */
+    lazy val expressionConditionalAnd: Parser[Expression] = expressionEquality ~ rep(lexical.TokenOperatorAnd ~ expressionEquality) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
     }
 
-    lazy val expressionEquality = expressionRelational ~ rep(operatorEquality ~ expressionRelational) ^^ {
+    /**
+     * A parser that matches an equality expression.
+     */
+    lazy val expressionEquality: Parser[Expression] = expressionRelational ~ rep(operatorEquality ~ expressionRelational) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
     }
 
-    lazy val operatorEquality = lexical.TokenOperatorEqual | lexical.TokenOperatorNotEqual
+    /**
+     * A parser that matches an equality operator.
+     */
+    lazy val operatorEquality: Parser[Elem] = lexical.TokenOperatorEqual | lexical.TokenOperatorNotEqual
 
-    lazy val expressionRelational = expressionAdditive ~ rep(operatorRelational ~ expressionAdditive) ^^ {
+    /**
+     * A parser that matches a relational expression.
+     */
+    lazy val expressionRelational: Parser[Expression] = expressionSet ~ rep(operatorRelational ~ expressionSet) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
     }
 
-    lazy val operatorRelational = lexical.TokenOperatorSubset | lexical.TokenOperatorSuperset | lexical.TokenOperatorLessThan | lexical.TokenOperatorGreaterThan | lexical.TokenOperatorLessThanOrEqual | lexical.TokenOperatorGreaterThanOrEqual
+    /**
+     * A parser that matches a relational operator.
+     */
+    lazy val operatorRelational: Parser[Elem] = lexical.TokenOperatorLessThan | lexical.TokenOperatorGreaterThan | lexical.TokenOperatorLessThanOrEqual | lexical.TokenOperatorGreaterThanOrEqual | lexical.TokenOperatorSubset | lexical.TokenOperatorSuperset
 
-    lazy val expressionAdditive = expressionMultiplicative ~ rep(operatorAdditive ~ expressionMultiplicative) ^^ {
+    /**
+     * A parser that matches a set expression.
+     */
+    lazy val expressionSet: Parser[Expression] = expressionAdditive ~ rep(operatorSet ~ expressionAdditive) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
     }
 
-    lazy val operatorAdditive = lexical.TokenOperatorUnion | lexical.TokenOperatorDifference | lexical.TokenOperatorIntersection | lexical.TokenOperatorAddition | lexical.TokenOperatorSubtraction
+    /**
+     * A parser that matches a set operator.
+     */
+    lazy val operatorSet: Parser[Elem] = lexical.TokenOperatorUnion | lexical.TokenOperatorDifference | lexical.TokenOperatorIntersection
 
-    lazy val expressionMultiplicative = expressionUnary ~ rep(operatorMultiplicative ~ expressionUnary) ^^ {
+    /**
+     * A parser that matches an additive expression.
+     */
+    lazy val expressionAdditive: Parser[Expression] = expressionMultiplicative ~ rep(operatorAdditive ~ expressionMultiplicative) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
             case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
         })
     }
 
-    lazy val operatorMultiplicative = lexical.TokenOperatorMultiplication | lexical.TokenOperatorDivision
+    /**
+     * A parser that matches an addition or subtraction operator.
+     */
+    lazy val operatorAdditive: Parser[Elem] = lexical.TokenOperatorAddition | lexical.TokenOperatorSubtraction
 
-    lazy val expressionUnary = opt(operatorUnary) ~ expressionPostfix ^^ {
+    /**
+     * A parser that matches a mutiplication or division expression.
+     */
+    lazy val expressionMultiplicative: Parser[Expression] = expressionUnary ~ rep(operatorMultiplicative ~ expressionUnary) ^^ {
+        case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {
+            case (op: lexical.TokenOperatorBinary) ~ er => ExpressionBinary(expression, er, operatorBinaryMap(op))
+        })
+    }
+
+    /**
+     * A parser that matches a multiplication or division operator.
+     */
+    lazy val operatorMultiplicative: Parser[Elem] = lexical.TokenOperatorMultiplication | lexical.TokenOperatorDivision
+
+    /**
+     * A parser that matches a unary expression.
+     */
+    lazy val expressionUnary: Parser[Expression] = opt(operatorUnary) ~ expressionPostfix ^^ {
         case None ~ e => e
         case Some(op: lexical.TokenOperatorUnary) ~ e => ExpressionUnary(e, operatorUnaryMap(op))
     }
 
-    lazy val operatorUnary = lexical.TokenOperatorNot | lexical.TokenOperatorCardinality
+    /**
+     * A parser that matches a unary operator.
+     */
+    lazy val operatorUnary: Parser[Elem] = lexical.TokenOperatorNot | lexical.TokenOperatorCardinality
 
-    lazy val expressionPostfix = expressionAtom ~ opt(operatorPostfix) ^^ {
+    /**
+     * A parser that matches a postfix expression.
+     */
+    lazy val expressionPostfix: Parser[Expression] = expressionAtom ~ opt(operatorPostfix) ^^ {
         case e ~ None => e
         case e ~ Some(op: lexical.TokenOperatorUnary) => ExpressionUnary(e, operatorUnaryMap(op))
     }
 
-    lazy val operatorPostfix = lexical.TokenOperatorDecrement | lexical.TokenOperatorDecrementToMinimum | lexical.TokenOperatorIncrementToMaximum | lexical.TokenOperatorIncrement
+    /**
+     * A parser that matches a postfix operator.
+     */
+    lazy val operatorPostfix: Parser[Elem] = lexical.TokenOperatorDecrement | lexical.TokenOperatorDecrementToMinimum | lexical.TokenOperatorIncrementToMaximum | lexical.TokenOperatorIncrement
 
-    lazy val expressionAtom: Parser[Expression] = expressionLiteral | expressionIdentifierSequence | expressionEnclosed
+    /**
+     * A parser that matches an atom.
+     */
+    lazy val expressionAtom: Parser[Expression] = literal | identifierQualified | expressionEnclosed
 
+    /**
+     * A parser that matches an enclosed expression.
+     */
     lazy val expressionEnclosed: Parser[Expression] = lexical.TokenKeywordParenthesesLeft ~ expression ~ lexical.TokenKeywordParenthesesRight ^^ {
         case _ ~ e ~ _ => e
     }
 
-    lazy val expressionIdentifier: Parser[ExpressionIdentifier] = elem("identifier", _.isInstanceOf[TokenIdentifier]) ^^ {
-        case lexical.TokenIdentifier(i) => ExpressionIdentifier(Symbol(i))
-    }
-
-    lazy val expressionIdentifierSequence = opt(expressionRelationshipEnclosed ~ lexical.TokenKeywordScope) ~ expressionIdentifier ~ rep(lexical.TokenKeywordScope ~ expressionIdentifier) ^^ {
-        case Some(r ~ _) ~ i ~ iList => iList.foldLeft(ExpressionIdentifierSequence(Some(r), Seq(i)))((expressionIdentifierSequence, operationExpression) => operationExpression match {
-            case _ ~ ir => ExpressionIdentifierSequence(expressionIdentifierSequence.owner, expressionIdentifierSequence.identifierSeq :+ ir)
-        })
-        case None ~ i ~ iList => iList.foldLeft(ExpressionIdentifierSequence(Some(ExpressionEntity(i)), Seq()))((expressionIdentifierSequence, operationExpression) => operationExpression match {
-            case _ ~ ir => ExpressionIdentifierSequence(expressionIdentifierSequence.owner, expressionIdentifierSequence.identifierSeq :+ ir)
-        })
-    }
-
-    lazy val expressionRelationshipEnclosed: Parser[ExpressionRelationship] = lexical.TokenKeywordParenthesesLeft ~ expressionRelationship ~ lexical.TokenKeywordParenthesesRight ^^ {
+    /**
+     * A parser that matches an enclosed relationship identifier.
+     */
+    lazy val identifierRelationshipEnclosed: Parser[IdentifierRelationship] = lexical.TokenKeywordParenthesesLeft ~ identifierRelationship ~ lexical.TokenKeywordParenthesesRight ^^ {
         case _ ~ r ~ _ => r
     }
 
-    lazy val expressionRelationship: Parser[ExpressionRelationship] = expressionRelationshipBidirectional | expressionRelationshipUnidirectional
+    /**
+     * A parser that matches a relationship identifier.
+     */
+    lazy val identifierRelationship: Parser[IdentifierRelationship] = identifierRelationshipBidirectional | identifierRelationshipUnidirectional
 
-    lazy val expressionRelationshipUnidirectional: Parser[ExpressionRelationshipUnidirectional] = expressionIdentifierSequence ~ lexical.TokenKeywordRelationshipUnidirectional ~ expressionIdentifierSequence ^^ {
-        case left ~ _ ~ right => ExpressionRelationshipUnidirectional(left, right)
+    /**
+     * A parser that matches a unidirectional relationship identifier.
+     */
+    lazy val identifierRelationshipUnidirectional: Parser[IdentifierRelationshipUnidirectional] = identifierQualified ~ lexical.TokenKeywordRelationshipUnidirectional ~ identifierQualified ^^ {
+        case left ~ _ ~ right => IdentifierRelationshipUnidirectional(left, right)
     }
 
-    lazy val expressionRelationshipBidirectional: Parser[ExpressionRelationshipBidirectional] = expressionIdentifierSequence ~ lexical.TokenKeywordRelationshipBidirectional ~ expressionIdentifierSequence ^^ {
-        case left ~ _ ~ right => ExpressionRelationshipBidirectional(left, right)
+    /**
+     * A parser that matches an bidirectional relationship identifier.
+     */
+    lazy val identifierRelationshipBidirectional: Parser[IdentifierRelationshipBidirectional] = identifierQualified ~ lexical.TokenKeywordRelationshipBidirectional ~ identifierQualified ^^ {
+        case left ~ _ ~ right => IdentifierRelationshipBidirectional(left, right)
     }
 
-    lazy val expressionLiteral: Parser[Expression] = expressionBoolean | expressionEmpty | expressionNumber | expressionString | failure("literal expected")
-
-    lazy val expressionBoolean: Parser[ExpressionLiteralBoolean] = expressionBooleanTrue | expressionBooleanFalse | failure("boolean expected")
-
-    lazy val expressionBooleanTrue: Parser[ExpressionLiteralBoolean] = lexical.TokenLiteralBooleanTrue ^^^ ExpressionLiteralBoolean(value = true)
-
-    lazy val expressionBooleanFalse: Parser[ExpressionLiteralBoolean] = lexical.TokenLiteralBooleanFalse ^^^ ExpressionLiteralBoolean(value = false)
-
-    lazy val expressionEmpty: Parser[ExpressionLiteralEmpty.type] = lexical.TokenLiteralEmpty ^^^ ExpressionLiteralEmpty
-
-    lazy val expressionNumber: Parser[ExpressionLiteralNumber] = elem("number", _.isInstanceOf[TokenLiteralNumber]) ^^ {
-        case lexical.TokenLiteralNumber(n) => ExpressionLiteralNumber(BigDecimal(n))
+    /**
+     * A parser that matches a qualified identifier.
+     */
+    lazy val identifierQualified: Parser[IdentifierAttributeQualified] = identifierRelationshipEnclosed ~ rep1(lexical.TokenKeywordScope ~ identifierPart) ^^ {
+        case iL ~ iList => iList.foldLeft(IdentifierAttributeQualified(iL, Seq()))((identifierAttributeQualified, operatorIdentifierPart) => operatorIdentifierPart match {
+            case _ ~ ir => IdentifierAttributeQualified(identifierAttributeQualified.owner, identifierAttributeQualified.symbolSequence :+ ir)
+        })
+    } | identifierPart ~ rep(lexical.TokenKeywordScope ~ identifierPart) ^^ {
+        case iL ~ iList => iList.foldLeft(IdentifierAttributeQualified(IdentifierEntity(None, iL), Seq()))((identifierAttributeQualified, operatorIdentifierPart) => operatorIdentifierPart match {
+            case _ ~ ir => IdentifierAttributeQualified(identifierAttributeQualified.owner, identifierAttributeQualified.symbolSequence :+ ir)
+        })
     }
 
-    lazy val expressionString: Parser[ExpressionLiteralString] = elem("string", _.isInstanceOf[TokenLiteralString]) ^^ {
-        case lexical.TokenLiteralString(s) => ExpressionLiteralString(s)
+    /**
+     * A parser that matches an unqualified identifier.
+     */
+    lazy val identifierUnqualified: Parser[IdentifierAttributeUnqualified] = identifierPart ~ rep(lexical.TokenKeywordScope ~ identifierPart) ^^ {
+        case iL ~ iList => iList.foldLeft(IdentifierAttributeUnqualified(Seq(iL)))((identifierAttributeUnqualified, operatorIdentifierPart) => operatorIdentifierPart match {
+            case _ ~ ir => IdentifierAttributeUnqualified(identifierAttributeUnqualified.symbolSequence :+ ir)
+        })
     }
 
-    val operatorUnaryMap: Map[Elem, OperatorUnary] = Map(
-        lexical.TokenOperatorCardinality -> OperatorCardinality,
-        lexical.TokenOperatorDecrement -> OperatorDecrement,
-        lexical.TokenOperatorDecrementToMinimum -> OperatorDecrementToMinimum,
-        lexical.TokenOperatorIncrement -> OperatorIncrement,
-        lexical.TokenOperatorIncrementToMaximum -> OperatorIncrementToMaximum,
-        lexical.TokenOperatorNot -> OperatorNot
+    /**
+     * A parser that matches an identifier part.
+     */
+    lazy val identifierPart: Parser[Symbol] = elem("identifier", _.isInstanceOf[TokenIdentifier]) ^^ {
+        case lexical.TokenIdentifier(i) => Symbol(i)
+    }
+
+    /**
+     * A parser that matches a literal: a boolean, empty set, number, or string literal.
+     */
+    lazy val literal: Parser[Literal] = literalBoolean | literalEmpty | literalNumber | literalString | failure("literal expected")
+
+    /**
+     * A parser that matches a boolean literal.
+     */
+    lazy val literalBoolean: Parser[LiteralBoolean] = literalBooleanFalse | literalBooleanTrue | failure("boolean expected")
+
+    /**
+     * A parser that matches the boolean literal false.
+     */
+    lazy val literalBooleanFalse: Parser[LiteralBoolean] = lexical.TokenLiteralBooleanTrue ^^^ LiteralBoolean(value = true)
+
+    /**
+     * A parser that matches the boolean literal true.
+     */
+    lazy val literalBooleanTrue: Parser[LiteralBoolean] = lexical.TokenLiteralBooleanFalse ^^^ LiteralBoolean(value = false)
+
+    /**
+     * A parser that matches the empty set literal.
+     */
+    lazy val literalEmpty: Parser[LiteralEmpty.type] = lexical.TokenLiteralEmpty ^^^ LiteralEmpty
+
+    /**
+     * A parser that matches a number literal.
+     */
+    lazy val literalNumber: Parser[LiteralNumber] = elem("number", _.isInstanceOf[TokenLiteralNumber]) ^^ {
+        case lexical.TokenLiteralNumber(n) => LiteralNumber(BigDecimal(n))
+    }
+
+    /**
+     * A parser that matches a string literal.
+     */
+    lazy val literalString: Parser[LiteralString] = elem("string", _.isInstanceOf[TokenLiteralString]) ^^ {
+        case lexical.TokenLiteralString(s) => LiteralString(s)
+    }
+
+    /**
+     * A map from a token that represents an assignment operator to the assignment operator.
+     */
+    val operatorAssignmentMap: Map[Elem, OperatorAssignment] = Map(
+        lexical.TokenOperatorAssignmentInsert -> OperatorAssignmentInsert,
+        lexical.TokenOperatorAssignmentRemove -> OperatorAssignmentRemove,
+        lexical.TokenOperatorAssignmentUpdate -> OperatorAssignmentUpdate
     )
-
+    /**
+     * A map from a token that represents a binary operator to the binary operator.
+     */
     val operatorBinaryMap: Map[Elem, OperatorBinary] = Map(
         lexical.TokenOperatorAddition -> OperatorAddition,
         lexical.TokenOperatorAnd -> OperatorAnd,
@@ -244,14 +402,16 @@ class Parser extends TokenParsers with LexerTokens {
         lexical.TokenOperatorUnion -> OperatorUnion
     )
 
-    val operatorAssignmentMap: Map[Elem, OperatorAssignment] = Map(
-        lexical.TokenOperatorAssignmentInsert -> OperatorAssignmentInsert,
-        lexical.TokenOperatorAssignmentRemove -> OperatorAssignmentRemove,
-        lexical.TokenOperatorAssignmentUpdate -> OperatorAssignmentUpdate
+    /**
+     * A map from a token that represents a unary operator to the unary operator.
+     */
+    val operatorUnaryMap: Map[Elem, OperatorUnary] = Map(
+        lexical.TokenOperatorCardinality -> OperatorCardinality,
+        lexical.TokenOperatorDecrement -> OperatorDecrement,
+        lexical.TokenOperatorDecrementToMinimum -> OperatorDecrementToMinimum,
+        lexical.TokenOperatorIncrement -> OperatorIncrement,
+        lexical.TokenOperatorIncrementToMaximum -> OperatorIncrementToMaximum,
+        lexical.TokenOperatorNot -> OperatorNot
     )
 
-    val operatorQueryMap: Map[Elem, OperatorQuery] = Map(
-        lexical.TokenOperatorQueryAll -> OperatorQueryAll,
-        lexical.TokenOperatorQueryNone -> OperatorQueryNone
-    )
 }

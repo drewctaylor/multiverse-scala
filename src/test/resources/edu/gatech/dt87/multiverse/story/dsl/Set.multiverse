@@ -14,13 +14,11 @@ goal test() {
   strategy {
     input input1 ?= true
 
-
     input1.d := input1.left difference input1.right
     input1.s := input1.left union input1.right
     input1.i := input1.left intersection input1.right
 
     "
-    
     { {{input1.left}} } difference { {{input1.right}} } = { {{input1.d}} }<br>
     { {{input1.left}} } union { {{input1.right}} } = { {{input1.s}} }<br>
     { {{input1.left}} } intersection { {{input1.right}} } = {{input1.i}} }<br>

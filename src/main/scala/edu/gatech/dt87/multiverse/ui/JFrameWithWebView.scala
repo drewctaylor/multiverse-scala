@@ -11,17 +11,17 @@ import javax.swing.JFrame
 import netscape.javascript.JSObject
 
 /**
- * A JFrame that contains a WebView.
- *
- * The WebView provides a view onto the given url. To the global object with the name globalObjectName, the system
- * attaches an object with the name serverObjectName; this object serves as the proxy for the given server.
- *
- * @param url the WebView url
- * @param globalObjectName the name of the global object
- * @param serverObjectName the name of the server object
- * @param server the server object
- * @tparam S the server type
- */
+* A JFrame that contains a WebView.
+*
+* The WebView provides a view onto the given url. To the global object with the name globalObjectName, the system
+* attaches an object with the name serverObjectName; this object serves as the proxy for the given server.
+*
+* @param url the WebView url
+* @param globalObjectName the name of the global object
+* @param serverObjectName the name of the server object
+* @param server the server object
+* @tparam S the server type
+*/
 
 class JFrameWithWebView[S](url: String, globalObjectName: String, serverObjectName: String, server: S) extends JFrame {
     /**

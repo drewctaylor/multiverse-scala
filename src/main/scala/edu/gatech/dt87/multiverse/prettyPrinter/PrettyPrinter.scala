@@ -2,6 +2,7 @@ package edu.gatech.dt87.multiverse.prettyPrinter
 
 import edu.gatech.dt87.multiverse.planner._
 import edu.gatech.dt87.multiverse.story._
+import edu.gatech.dt87.multiverse.story.state._
 
 object PrettyPrinter {
 
@@ -43,8 +44,6 @@ object PrettyPrinter {
             case AttributeValueBoolean(value) => value.toString
             case AttributeValueEntity(key) => jsonEntityKey(key)
             case AttributeValueNumber(value) => value.toString()
-            case AttributeValueRelationshipBidirectional(left, right) => jsonRelationshipKey((left, right))
-            case AttributeValueRelationshipUnidirectional(left, right) => jsonRelationshipKey((left, right))
             case AttributeValueSymbol(value) => s""""${value.name}""""
             case AttributeValueSymbolOrdered(value, symbolSequence) => s""""${value.name}""""
         }).mkString(",") + "]"

@@ -1,5 +1,6 @@
-package edu.gatech.dt87.multiverse.story
+package edu.gatech.dt87.multiverse.story.state
 
+import edu.gatech.dt87.multiverse.story.StateStrategyStep
 import edu.gatech.dt87.multiverse.story.dsl.parser._
 
 import scala.collection.immutable.Set
@@ -9,10 +10,6 @@ sealed trait AttributeValue
 case class AttributeValueBoolean(boolean: Boolean) extends AttributeValue
 
 case class AttributeValueEntity(entity: (Symbol, Int)) extends AttributeValue
-
-case class AttributeValueRelationshipBidirectional(left : (Symbol, Int), right : (Symbol, Int)) extends AttributeValue
-
-case class AttributeValueRelationshipUnidirectional(left : (Symbol, Int), right : (Symbol, Int)) extends AttributeValue
 
 case class AttributeValueNumber(number: BigDecimal) extends AttributeValue
 
@@ -176,6 +173,131 @@ object AttributeValueOperation {
             case OperatorSubtraction => subtract(right)(left)
             case OperatorSuperset => superset(right)(left)
             case OperatorUnion => union(right)(left)
+        }
+    }
+
+    /**
+     * Evaluate an expression as follows:
+     * 1) If a unary expression,
+     * Evaluate the left expression, then perform the unary operation on the result.
+     *
+     * 2) If a binary expression,
+     * if the and operation
+     * evaluate the left expression
+     * if the value of the left expression is true,
+     * evaluate the right expression
+     * otherwise if the value of the left expression is false,
+     * return the value of the left expression
+     * otherwise (the value of the left expression is not boolean, and the operation is invalid)
+     * return None
+     * if the or operation
+     * evaluate the left expression
+     * if the value of the left expression is false,
+     * evaluate the right expression
+     * otherwise if the value of the left expression is true,
+     * return the value of the left expression
+     * otherwise (the value of the left expression is not boolean, and the operation is invalid)
+     * return None
+     * otherwise
+     * evaluate the left expression, the right expression, then perform the binary operation on the result
+     *
+     * 3) If a boolean literal,
+     * return an attribute value for that boolean
+     *
+     * 4) If an empty set literal,
+     * return an attribute value for that empty set
+     *
+     * 5) If a number literal,
+     * return an attribute value for that number
+     *
+     * 6) If a string literal,
+     * return an attribute value for that string
+     *
+     * 7) If an identifier,
+     * If the identifier resolves to an attribute, the value of the attribute
+     * If the identifier resolves to an entity, the value of the entity
+     * If the identifier resolves to a relationship, None (this is an error).
+     * Otherwise None.
+     *
+     * @param state the state
+     * @param symbolMap the symbol map
+     * @param expression the expression
+     * @return the result of the expression, if any
+     */
+    def evaluateExpression(state: State, symbolMap: StateStrategyStep.SymbolMap, expression: Expression): Option[Set[AttributeValue]] = {
+        expression match {
+            case ExpressionUnary(left, op) =>
+                AttributeValueOperation.evaluate(evaluateExpression(state, symbolMap, left), op)
+
+            case ExpressionBinary(left, right, op) =>
+                op match {
+                    case OperatorAnd =>
+                        val leftEvaluate = evaluateExpression(state, symbolMap, left)
+
+                        leftEvaluate.map(_.toSeq) match {
+                            case Some(Seq(AttributeValueBoolean(true))) =>
+                                evaluateExpression(state, symbolMap, right)
+
+                            case _ =>
+                                Some(Set(AttributeValueBoolean(boolean = false)))
+                        }
+
+                    case OperatorOr =>
+                        val leftEvaluate = evaluateExpression(state, symbolMap, left)
+
+                        leftEvaluate.map(_.toSeq) match {
+                            case Some(Seq(AttributeValueBoolean(false))) =>
+                                AttributeValueOperation.evaluate(leftEvaluate, evaluateExpression(state, symbolMap, right), op)
+
+                            case _ =>
+                                Some(Set(AttributeValueBoolean(boolean = true)))
+                        }
+
+                    case _ =>
+                        AttributeValueOperation.evaluate(evaluateExpression(state, symbolMap, left), evaluateExpression(state, symbolMap, right), op)
+                }
+
+            case LiteralBoolean(value) =>
+                Some(Set(AttributeValueBoolean(value)))
+
+            case LiteralEmpty =>
+                Some(Set())
+
+            case LiteralNumber(value) =>
+                Some(Set(AttributeValueNumber(value)))
+
+            case LiteralString(value) =>
+                Some(Set(AttributeValueSymbol(Symbol(value))))
+
+            case i: IdentifierAttributeQualified =>
+                StateLocation.resolve(state, symbolMap, i) match {
+                    case Some(StateLocationAttribute(StateLocationEntity(entity), attribute)) =>
+                        val entitySetOption = state.entitySetMap.get(entity._1) // should be Some
+                        val entityOption = entitySetOption.map(_.entityMap.get(entity._2)).flatten // should be Some
+                        entityOption.map(_.attributeMap.get(attribute)).flatten orElse Some(Set())
+
+                    case Some(StateLocationAttribute(StateLocationRelationshipBidirectional(StateLocationEntity(left), StateLocationEntity(right)), attribute)) =>
+                        val entityOption = state.relationshipBidirectionalMap.get((left, right)) // should be Some
+                        entityOption.map(_.attributeMap.get(attribute)).flatten orElse Some(Set())
+
+                    case Some(StateLocationAttribute(StateLocationRelationshipUnidirectional(StateLocationEntity(left), StateLocationEntity(right)), attribute)) =>
+                        val entityOption = state.relationshipUnidirectionalMap.get((left, right)) // should be Some
+                        entityOption.map(_.attributeMap.get(attribute)).flatten orElse Some(Set())
+
+                    case Some(StateLocationEntity(entity)) =>
+                        Some(Set(AttributeValueEntity(entity)))
+
+                    case Some(StateLocationRelationshipBidirectional(StateLocationEntity(left), StateLocationEntity(right))) =>
+                        println(s"The expression ${i.toString} references a bidirectional relationship.")
+                        None
+
+                    case Some(StateLocationRelationshipUnidirectional(StateLocationEntity(left), StateLocationEntity(right))) =>
+                        println(s"The expression ${i.toString} references a unidirectional relationship.")
+                        None
+
+                    case None =>
+                        None
+                }
         }
     }
 

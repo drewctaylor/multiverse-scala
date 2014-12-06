@@ -1,5 +1,4 @@
 state {
-    ~ John Smith is a potential victim ~
 
     character john {
         name := "John Smith"
@@ -10,8 +9,6 @@ state {
         detective := false
         alive := true
     }
-
-    ~ Jerry Fontana is a potential victim ~
 
     character jerry {
         name := "Jerry Fontana"
@@ -200,11 +197,9 @@ state {
 
 goal murderMystery() {
     strategy {
-        character victim !?= victim.potentialVictim == true && victim.alive == true
+        character victim ? !(victim.potentialVictim == true && victim.alive == true)
 
         "<div class='action'>No more victims to kill! The End!</div>"
-
-true == false
 
     }
 

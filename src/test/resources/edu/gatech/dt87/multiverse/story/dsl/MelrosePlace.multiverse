@@ -5,12 +5,41 @@ state {
     ~ Amanda Woodward ~
 
     character amanda {
-        life := "alive"
-        first := "Amanda"
-        last := "Woodward"
-        gender := "female"
-        orientation := "male"
-        age := 30
+      life := "alive"
+      first := "Amanda"
+      last := "Woodward"
+      gender := "female"
+      orientation := "male"
+      age := 30
+      father := palmer
+    }
+
+    ~ Palmer Woodward, Amanda's Father ~
+
+    character palmer {
+      life := "alive"
+      first := "Palmer"
+      last := "Woodward"
+      gender := "male"
+      orientation := "female"
+      age := 60
+    }
+
+    palmer->amanda {
+      parent := true
+    }
+
+    amanda->palmer {
+      child := true
+    }
+
+    amanda<->billy {
+      marriage := true
+      child := alison
+    }
+
+    (amanda<->billy).child ->amanda.father {
+      marriage := true
     }
 
     ~ Alison Parker ~
@@ -22,6 +51,7 @@ state {
         gender := "female"
         orientation := "male"
         age := 30
+        test := jane
     }
 
     ~ Jane Andrews ~
@@ -135,13 +165,13 @@ goal life (character c) "Character Life" {
 
 goal single (character c1) "Character Single" {
     strategy "No Operation" {
-        character c2 !?= (c1<->c2).marriage
+        character c2 ? (c1<->c2).marriage == empty
 
         "<div class='action'>{{c1.first}} lies by the pool, and {{c1.sub}} dreams of love while sunning {{c1.ref}}.</div>"
     }
 
     strategy "By Death" {
-        character c2 ?= (c1<->c2).marriage
+        character c2 ?= (c1<->c2).marriage != empty
 
         c2.life := "dead"
 
@@ -151,7 +181,7 @@ goal single (character c1) "Character Single" {
     }
 
     strategy "By Divorce" {
-        character c2 ?= (c1<->c2).marriage
+        character c2 ?= (c1<->c2).marriage != empty
 
         (c1<->c2).marriage := empty
 
@@ -161,19 +191,19 @@ goal single (character c1) "Character Single" {
 
 goal marry () "Marriage Scene" {
   strategy "Marriage Strategy" {
-        character c1, character c2 ?= c1 != c2 &&
-          c1.gender subset c2.orientation &&
-          c2.gender subset c1.orientation &&
-          (c1<->c2).marriage == empty
+      character c1, character c2 ?= c1 != c2 &&
+        c1.gender subset c2.orientation &&
+        c2.gender subset c1.orientation &&
+        (c1<->c2).marriage == empty
 
-        life (c1)
-        life (c2)
-        single (c1)
-        single (c2)
+      life (c1)
+      life (c2)
+      single (c1)
+      single (c2)
 
-        (c1<->c2).marriage := true
+      (c1<->c2).marriage := true
 
-        "<div class=\"action\">{{c1.first}} and {{c2.first}} marry.</div>"
+      "<div class=\"action\">{{c1.first}} and {{c2.first}} marry.</div>"
     }
 }
 
