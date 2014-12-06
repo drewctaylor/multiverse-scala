@@ -1,0 +1,17 @@
+language: scala
+script:
+	- sbt ++$TRAVIS_SCALA_VERSION $PLATFORM/clean $PLATFORM/update $PLATFORM/compile $PLATFORM/test
+env:
+	- PLATFORM=jvm
+scala:
+	- 2.11.4
+jdk:
+	- oraclejdk8
+	- oraclejdk7
+	- openjdk8
+	- openjdk7
+notifications:
+	email:
+		- adriaan.moors@typesafe.com
+		- rickynils@gmail.com
+
