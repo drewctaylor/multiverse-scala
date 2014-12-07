@@ -84,6 +84,6 @@ hr:after {
     border-bottom: 1px solid black;
 }
 
-.postit:hover span {
+.postit:hover div {
     color: black;
 }

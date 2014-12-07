@@ -13,7 +13,7 @@ object Fabula {
     }
 
     def fabula[S, X, X1, Y1, Y](strategyExecution : StrategyExecution[S, X, Y]) : Seq[EventExecution[S, _, _]] = {
-        strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence.flatMap {
+        strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence().flatMap {
             case eventContext: EventExecution[S, X, Y] => Seq(eventContext)
             case subgoalContext: SubgoalExecution[S, X, X1, Y1, Y] => fabula(subgoalContext.goalExecution)
         }
