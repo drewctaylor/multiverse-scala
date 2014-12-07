@@ -1,6 +1,6 @@
 language: scala
 script:
- - sbt ++$TRAVIS_SCALA_VERSION clean compile test assembly
+ - sbt ++$TRAVIS_SCALA_VERSION clean compile test
 scala:
  - 2.11.2
 jdk:
