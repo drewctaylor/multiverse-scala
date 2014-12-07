@@ -140,10 +140,21 @@ object Compiler {
                                 }).map(assignment => {
                                     StateStrategyStep.bind(assignment.asInstanceOf[StatementAssignmentQualified])
                                 }) ++ strategyDeclaration.statementList.map({
-                                    case s: StatementAssignmentQualified => StateStrategyStep.assign(s)
-                                    case s: StatementNarration => StateStrategyStep.narrate(s)
-                                    case s: StatementSubgoal => StateStrategyStep.subgoal(s, goalFor)
-                                    case s: StatementQuery => StateStrategyStep.query(s)
+                                    case s: StatementAssignmentQualified =>
+                                        StateStrategyStep.assign(s)
+
+                                    case s: StatementNarration =>
+                                        StateStrategyStep.narrate(s)
+
+                                    case s: StatementSubgoal =>
+                                        StateStrategyStep.subgoal(s, goalFor)
+
+                                    case s: StatementQuery =>
+                                        StateStrategyStep.query(s)
+
+                                    case s: StatementAssignmentUnqualified =>
+                                        println("An unqualified assignment statement may not appear here.")
+                                        None
                                 })
 
                                 val strategyStep = strategyStepList.reduce((a: StrategyStepT, b: StrategyStepT) => {

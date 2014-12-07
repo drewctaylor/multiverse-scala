@@ -298,6 +298,22 @@ object AttributeValueOperation {
                     case None =>
                         None
                 }
+
+            case i: IdentifierAttributeUnqualified =>
+                println(s"An unqualified identifier must not appear here.")
+                None
+
+            case i: IdentifierEntity =>
+                println(s"An entity identifier must not appear here.")
+                None
+
+            case i: IdentifierRelationshipBidirectional =>
+                println(s"A bidirectional relationship identifier must not appear here.")
+                None
+
+            case i: IdentifierRelationshipUnidirectional =>
+                println(s"A unidirectional relationship identifier must not appear here.")
+                None
         }
     }
 
