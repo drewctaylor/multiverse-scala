@@ -153,13 +153,13 @@ goal life (character c) "Character Life" {
     strategy "No Operation" {
         ?= c.life == "alive"
 
-        "<div class='action'>{{c.first}} lies by the pool.</div>"
+        "<p>{{c.first}} lies by the pool.</p>"
     }
 
     strategy "Resurrect" {
         ?= c.life == "dead"
 
-        "<div class='action'>{{c.first}} returns to Melrose Place, very much alive.</div>"
+        "<p>{{c.first}} returns to Melrose Place, very much alive.</p>"
     }
 }
 
@@ -167,7 +167,7 @@ goal single (character c1) "Character Single" {
     strategy "No Operation" {
         character c2 ? (c1<->c2).marriage == empty
 
-        "<div class='action'>{{c1.first}} lies by the pool, and {{c1.sub}} dreams of love while sunning {{c1.ref}}.</div>"
+        "<p>{{c1.first}} lies by the pool, and {{c1.sub}} dreams of love while sunning {{c1.ref}}.</p>"
     }
 
     strategy "By Death" {
@@ -177,7 +177,7 @@ goal single (character c1) "Character Single" {
 
         (c1<->c2).marriage := empty
 
-        "<div class='action'>{{c2.first}} dies, leaving {{c1.first}} alone.</div>"
+        "<p>{{c2.first}} dies, leaving {{c1.first}} alone.</p>"
     }
 
     strategy "By Divorce" {
@@ -185,7 +185,7 @@ goal single (character c1) "Character Single" {
 
         (c1<->c2).marriage := empty
 
-        "<div class='action'>{{c2.first}} and {{c1.first}} divorce.</div>"
+        "<p>{{c2.first}} and {{c1.first}} divorce.</p>"
     }
 }
 
@@ -203,7 +203,7 @@ goal marry () "Marriage Scene" {
 
       (c1<->c2).marriage := true
 
-      "<div class=\"action\">{{c1.first}} and {{c2.first}} marry.</div>"
+      "<p>{{c1.first}} and {{c2.first}} marry.</p>"
     }
 }
 
@@ -213,7 +213,7 @@ goal divorce () "Divorce Scene" {
 
         (c1<->c2).marriage := empty
 
-        "<div class=\"action\">{{c1.first}} and {{c2.first}} divorce.</div>"
+        "<p>{{c1.first}} and {{c2.first}} divorce.</p>"
     }
 }
 
@@ -222,7 +222,8 @@ goal forcedMarriage() "Forced Marriage Plot" {
   strategy {
     character child, character parent ?=
       (child->parent).child &&
-      (parent->child).parent
+      (parent->child).parent &&
+      parent.life == "alive"
 
     character spouse ?= (child<->spouse).marriage
 
@@ -232,26 +233,26 @@ goal forcedMarriage() "Forced Marriage Plot" {
       spouse != lover &&
       child.gender subset lover.orientation
 
-    "<div class=\"action\">
+    "<p>
       Although {{child.first}} and {{spouse.first}} are happily married,
       {{parent.first}} does not approve of {{spouse.first}}, and {{parent.sub}}
       would rather that {{child.first}} marry {{parent.pos}} protoge,
       {{lover.first}}. One day, {{parent.first}} pulls {{child.first}} aside and
       tells {{child.obj}}, \"Divorce {{spouse.first}}, or I'll ruin {{spouse.obj}}.\"
-    </div>"
+    </p>"
 
     (child<->spouse).marriage := empty
 
-    "<div class='action'>
+    "<p>
       {{child.first}} steels {{child.ref}}, then confronts {{spouse.first}}: 'I
       want a divorce.'
-    </div>"
+    </p>"
 
     (child<->lover).marriage := true
 
-    "<div class='action'>
+    "<p>
       Soon after, {{child.first}} marries {{lover.first}}.
-    </div>"
+    </p>"
 
     character friend ?=
       friend != lover &&
@@ -259,9 +260,9 @@ goal forcedMarriage() "Forced Marriage Plot" {
       friend != spouse &&
       friend != parent
 
-    "<div class='action'>
+    "<p>
       Shocked, {{spouse.first}} is comforted by {{spouse.det}} friend, {{friend.first}}.
-    </div>"
+    </p>"
 
     character rebound ?=
       rebound != lover &&
@@ -271,17 +272,17 @@ goal forcedMarriage() "Forced Marriage Plot" {
       spouse.gender subset rebound.orientation &&
       rebound.gender subset spouse.orientation
 
-    "<div class=\"action\">
+    "<p>
       Ultimately, {{spouse.first}} finds a new love in {{rebound.first}}, and they marry.
-    </div>"
+    </p>"
 
     (spouse<->rebound).marriage := true
 
     parent.life := "dead"
     (child<->lover).marriage := false
 
-    "<div class='action'>
+    "<p>
       {{parent.first}} unexpectedly dies, leaving {{child.first}} free to divorce {{child.det}} spouse.
-    </div>"
+    </p>"
   }
 }

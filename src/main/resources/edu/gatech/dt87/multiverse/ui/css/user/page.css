@@ -1,0 +1,89 @@
+@font-face {
+  font-family: 'Tangerine';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Tangerine'), url(../vendor/Tangerine.woff) format('woff');
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+p {
+    margin: 0;
+    padding: 0em 0em 1em 0em;
+    border: 0;
+    text-align: justify;
+}
+
+hr {
+    margin: 1em 1.5in 0em 1.5in;
+    padding: .5em;
+    border: 0;
+    border-top: 1px solid black;
+    text-align: center;
+    color: black;
+    clear: both;
+}
+
+hr:after {
+    content: "\00A7";
+    position: relative;
+    top: -1.2em;
+    background: white;
+}
+
+.page {
+    width: 8.5in;
+    margin: .5in auto 10in auto;
+    padding: 1in 1in 3in 1in;
+    font-family: "Times New Roman", serif;
+    font-size: 12pt;
+    box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, .25);
+}
+
+.title {
+    text-align: center;
+    margin: 0em 1.5in 1em 1.5in;
+    font-family: "Tangerine", cursive;
+    font-size: 50pt;
+    font-weight: bold;
+}
+
+.scene-content {
+    margin: 0em 1.5in 0em 1.5in;
+}
+
+.postit {
+    width: 1.5in;
+    padding: 0in .25in;
+    margin-bottom: .125in;
+    font-family: "Tangerine", cursive;
+    font-size: 20pt;
+    cursor: pointer;
+    clear: left;
+    color: gray;
+}
+
+.postit.left {
+    float: left;
+    margin-left: -.75in;
+}
+
+.postit.right {
+    float: right;
+    margin-right: -.75in;
+}
+
+.postit.selected div {
+    display: inline-block;
+    color: black;
+    border-bottom: 1px solid black;
+}
+
+.postit:hover span {
+    color: black;
+}

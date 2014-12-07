@@ -4,6 +4,9 @@ import edu.gatech.dt87.multiverse.planner.{Fabula, EventExecution, Goal, Planner
 import edu.gatech.dt87.multiverse.prettyPrinter.PrettyPrinter
 import edu.gatech.dt87.multiverse.story.StateStrategyStep.SymbolMap
 import edu.gatech.dt87.multiverse.story.state.State
+import monocle.function._
+import monocle.std._
+import monocle.syntax._
 
 case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]]) {
     var goalForId = Map[String, Goal[State, SymbolMap, SymbolMap]]()
@@ -49,7 +52,8 @@ case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]])
     }
 
     def satisfyGoal(stateId: String, goalId: String): String = {
-        val goalExecution = goalForId(goalId).satisfy(stateForId(stateId), Map[Symbol, (Symbol, Int)]())
+        val state = stateForId(stateId).applyLens(State.focusNarration).set(None)
+        val goalExecution = goalForId(goalId).satisfy(state, Map[Symbol, (Symbol, Int)]())
         val fabula = "[" + (Fabula.fabula(goalExecution): Seq[EventExecution[State, _, _]]).map((eventContext: EventExecution[State, _, _]) => { s"""{"eventName":"${eventContext.event.label}","stateId":"${idForStateHelper(eventContext.successor().get._1)}","narration":"${eventContext.successor().get._1.narration.map(_.replace('\n', ' ')).getOrElse("")}"}"""}).mkString(",") + "]"
         val ret = s"""{ "goalId" : "$goalId", "goalExecution" : ${PrettyPrinter.json(goalExecution)}, "fabula" : $fabula }"""
 

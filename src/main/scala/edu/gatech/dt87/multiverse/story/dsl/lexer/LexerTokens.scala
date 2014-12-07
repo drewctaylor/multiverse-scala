@@ -85,7 +85,6 @@ trait LexerTokens extends Tokens {
         TokenOperatorQueryEqual,
         TokenKeywordStory,
         TokenKeywordState,
-        TokenKeywordEntity,
         TokenKeywordGoal,
         TokenKeywordParenthesesLeft,
         TokenKeywordParenthesesRight,
@@ -133,13 +132,13 @@ trait LexerTokens extends Tokens {
 
     case object TokenOperatorDivision extends TokenReserved("/") with TokenOperatorBinary
 
-    case object TokenOperatorIncrement extends TokenReserved("increment", "++") with TokenOperatorUnary
+    case object TokenOperatorIncrement extends TokenReserved("++") with TokenOperatorUnary
 
-    case object TokenOperatorIncrementToMaximum extends TokenReserved("max", "maximum", "+++") with TokenOperatorUnary
+    case object TokenOperatorIncrementToMaximum extends TokenReserved("+++") with TokenOperatorUnary
 
-    case object TokenOperatorDecrement extends TokenReserved("decrement", "--") with TokenOperatorUnary
+    case object TokenOperatorDecrement extends TokenReserved("--") with TokenOperatorUnary
 
-    case object TokenOperatorDecrementToMinimum extends TokenReserved("min", "minimum", "---") with TokenOperatorUnary
+    case object TokenOperatorDecrementToMinimum extends TokenReserved("---") with TokenOperatorUnary
 
     case object TokenOperatorLessThan extends TokenReserved("<") with TokenOperatorBinary
 
@@ -149,7 +148,7 @@ trait LexerTokens extends Tokens {
 
     case object TokenOperatorGreaterThanOrEqual extends TokenReserved(">=") with TokenOperatorBinary
 
-    case object TokenOperatorCardinality extends TokenReserved("#", "cardinality") with TokenOperatorUnary
+    case object TokenOperatorCardinality extends TokenReserved("#") with TokenOperatorUnary
 
     case object TokenOperatorSubset extends TokenReserved("subset") with TokenOperatorBinary
 
@@ -194,8 +193,6 @@ trait LexerTokens extends Tokens {
     case object TokenKeywordComma extends TokenReserved(",")
 
     case object TokenKeywordStory extends TokenReserved("story")
-
-    case object TokenKeywordEntity extends TokenReserved("entity")
 
     case object TokenKeywordState extends TokenReserved("state")
 

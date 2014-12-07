@@ -7,46 +7,50 @@ require.config({
 });
 
 require(["jquery", "handlebars", "serverProxy"], function ($, handlebars, serverProxy) {
-    $(document).ready(function() {
+    $(document).ready(function () {
         function satisfy(stateId, goalId, divScene) {
             var eventSequence = serverProxy.satisfyGoal(stateId, goalId).fabula
 
-            var narrationArrayWithDuplicates = eventSequence.map(function(element) {
+            var narrationArrayWithDuplicates = eventSequence.map(function (element) {
                 return element.narration;
             });
 
-            var narrationArray = narrationArrayWithDuplicates.reduce(function(previous, next) {
-                if(previous.length === 0 || previous[previous.length - 1] !== next) {
+            var narrationArray = narrationArrayWithDuplicates.reduce(function (previous, next) {
+                if (previous.length === 0 || previous[previous.length - 1] !== next) {
                     return previous.concat(next);
                 } else {
                     return previous;
                 }
             }, []);
 
-            var divSceneTextReplace = $("<div class=\"scene-text\">" + narrationArray.join("  ") + "</div>");
-            $($(divScene).find(".scene-text")).replaceWith(divSceneTextReplace)
+            var divSceneTextReplace = $("<div class=\"scene-content\">" + narrationArray.join("  ") + "</div>");
+            $($(divScene).find(".scene-content")).replaceWith(divSceneTextReplace)
 
             var divSceneNext = $("<div class=\"scene\"></div>");
             var divPostitSet = $("<div class=\"postit-set\"></div>");
-            var divSceneText =  $("<div class=\"scene-text\"></div>");
+            var divSceneText = $("<div class=\"scene-content\"></div>");
+            var divSeparator = $("<hr>");
 
             divSceneNext.append(divPostitSet);
             divSceneNext.append(divSceneText);
 
             var goalSet = serverProxy.satisfiableGoalSet(eventSequence[eventSequence.length - 1].stateId);
 
-            goalSet.forEach(function(goal) {
-                var divPostit = $("<div class=\"postit left\">" + goal.goalName + "</div>");
-                divPostit.click(function() {
+            goalSet.sort(function (a, b) {
+                return a.goalName.localeCompare(b.goalName)
+            }).forEach(function (goal) {
+                var divPostit = $("<div class=\"postit left\"><div>" + goal.goalName + "</div></div>");
+                divPostit.click(function () {
                     divPostitSet.children().removeClass("selected");
                     divPostit.addClass("selected");
                     divSceneNext.nextAll().remove();
-                    satisfy(eventSequence[eventSequence.length -1].stateId, goal.goalId, divSceneNext);
+                    divSceneNext.append(divSeparator);
+                    satisfy(eventSequence[eventSequence.length - 1].stateId, goal.goalId, divSceneNext);
                 });
                 divPostitSet.append(divPostit);
             });
 
-            $("#screenplay").append(divSceneNext);
+            $("#page").append(divSceneNext);
         }
 
         var state = serverProxy.initial();
@@ -58,22 +62,26 @@ require(["jquery", "handlebars", "serverProxy"], function ($, handlebars, server
 
         var divScene = $("<div class=\"scene\"></div>");
         var divPostitSet = $("<div class=\"postit-set\"></div>");
-        var divSceneText = $("<div class=\"scene-text\"></div>");
+        var divSceneText = $("<div class=\"scene-content\"></div>");
+        var divSeparator = $("<hr>");
 
         divScene.append(divPostitSet);
         divScene.append(divSceneText);
 
-        goalSet.forEach(function(goal) {
-            var divPostit = $("<div class=\"postit left\">" + goal.goalName + "</div>");
-            divPostit.click(function() {
+        goalSet.sort(function (a, b) {
+            return a.goalName.localeCompare(b.goalName)
+        }).forEach(function (goal) {
+            var divPostit = $("<div class=\"postit left\"><div>" + goal.goalName + "</div></div>");
+            divPostit.click(function () {
                 divPostitSet.children().removeClass("selected");
                 divPostit.addClass("selected");
                 divScene.nextAll().remove();
+                divScene.append(divSeparator);
                 satisfy(0, goal.goalId, divScene);
             });
             divPostitSet.append(divPostit);
         });
 
-        $("#screenplay").append(divScene)
+        $("#page").append(divScene)
     });
 });
