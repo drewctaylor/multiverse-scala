@@ -151,10 +151,10 @@ object Compiler {
 
                                     case s: StatementQuery =>
                                         StateStrategyStep.query(s)
-
-                                    case s: StatementAssignmentUnqualified =>
-                                        println("An unqualified assignment statement may not appear here.")
-                                        None
+//
+//                                    case s: StatementAssignmentUnqualified =>
+//                                        println("An unqualified assignment statement may not appear here.")
+//                                        None
                                 })
 
                                 val strategyStep = strategyStepList.reduce((a: StrategyStepT, b: StrategyStepT) => {
