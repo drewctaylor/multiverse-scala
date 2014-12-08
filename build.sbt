@@ -3,7 +3,7 @@ import java.nio.file.StandardCopyOption._
 
 import sbt.Keys._
 
-assembly := {
+sbtassembly.AssemblyKeys.assembly := {
     val assemblyValue = sbtassembly.AssemblyKeys.assembly.value
     Files.copy(assemblyValue.toPath, Paths.get(".").resolve(assemblyValue.toPath.getFileName), REPLACE_EXISTING)
     assemblyValue
