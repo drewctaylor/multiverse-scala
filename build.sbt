@@ -2,10 +2,9 @@ import java.nio.file.{Paths, Files}
 import java.nio.file.StandardCopyOption._
 
 import sbt.Keys._
-import sbtassembly.AssemblyPlugin.autoImport._
 
-sbtassembly.AssemblyPlugin.autoImport.assembly := {
-    val assemblyValue = sbtassembly.AssemblyPlugin.autoImport.assembly.value
+assembly := {
+    val assemblyValue = assembly.value
     Files.copy(assemblyValue.toPath, Paths.get(".").resolve(assemblyValue.toPath.getFileName), REPLACE_EXISTING)
     assemblyValue
 }
@@ -22,7 +21,7 @@ lazy val root = (project in file(".")).
             "com.github.julien-truffaut" %% "monocle-macro" % "0.5.1",
             "org.scalacheck" %% "scalacheck" % "1.12.0" % "test",
             "org.scalatest" %% "scalatest" % "2.2.1" % "test"),
-        mainClass.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := Some("edu.gatech.dt87.multiverse.ui.Main"),
-        sbtassembly.AssemblyPlugin.autoImport.assemblyJarName.in(sbtassembly.AssemblyPlugin.autoImport.assembly) := "multiverse.jar"
+        mainClass.in(assembly) := Some("edu.gatech.dt87.multiverse.ui.Main"),
+        assemblyJarName.in(assembly) := "multiverse.jar"
     )
 
