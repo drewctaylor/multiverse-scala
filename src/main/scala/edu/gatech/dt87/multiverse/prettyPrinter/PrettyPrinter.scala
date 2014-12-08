@@ -45,7 +45,6 @@ object PrettyPrinter {
             case AttributeValueEntity(key) => jsonEntityKey(key)
             case AttributeValueNumber(value) => value.toString()
             case AttributeValueSymbol(value) => s""""${value.name}""""
-            case AttributeValueSymbolOrdered(value, symbolSequence) => s""""${value.name}""""
         }).mkString(",") + "]"
     }
 

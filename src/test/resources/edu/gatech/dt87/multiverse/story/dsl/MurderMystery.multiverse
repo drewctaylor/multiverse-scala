@@ -172,7 +172,7 @@ state {
   }
 
   gene -> jerry {
-    coworker := 20
+    coworker := true
   }
 
   rachel -> john {
@@ -209,15 +209,20 @@ goal murderMystery() "Tell Murder Mystery" {
 
   strategy "No More Living Victims" {
     character victim ?
-      victim.potentialVictim == true &&
-      victim.alive           == false
+    (victim.potentialVictim == true &&
+      victim.alive           == false ) ||
+      (victim.detective       == true )
 
-    "
-    <p>
-    No more victims to kill! The End!
-    </p>
-    "
-  }
+      "
+      <p>
+      Every potential victim is dead.
+      </p>
+
+      <p>
+      The End!
+      </p>
+      "
+    }
 
   strategy "Tell Story" {
     character victim, character detective ?=
@@ -230,6 +235,15 @@ goal murderMystery() "Tell Murder Mystery" {
       detective := detective
       active := true
     }
+
+    "
+    <p style=\"text-align: center; font-style: italic\">
+    For the Wide Ruled story, see
+    </p>
+    <p style=\"text-align: center; font-style: italic\">
+    http://skorupski.org/wiki/wide_ruled/wide_ruled_v2
+    </p>
+    "
 
     "
     <p>
@@ -248,10 +262,9 @@ goal murderMystery() "Tell Murder Mystery" {
 
     find(crime.detective)
     investigate(crime)
-~
     solve(crime)
     capture(crime)
-~
+
     "
     <p>
     The End!
@@ -295,7 +308,7 @@ goal crime(crime crime) "Choose the murderer." {
 
   strategy "The murderer is an enemy." {
     character murderer, environment scene, environment hideout ?=
-      (crime.victim->murderer).enemy > 5 &&
+      (crime.victim->murderer).enemy == true &&
       scene.potentialMurderLocation == true &&
       (scene->hideout).adjacent == true
 
@@ -453,76 +466,82 @@ goal investigate(crime crime) "Investigate the crime" {
 
 }
 
-~
-goal solve() {
-    strategy {
-        crime c, character detective, character murderer, character victim, environment hideout ?=
-            c.active == true &&
-            c.detectiveName == detective.name &&
-            c.murdererName == murderer.name &&
-            c.victimName == victim.name &&
-            c.hideoutName == hideout.name
+goal solve(crime crime) "Solve the crime." {
+  strategy "Solve the crime celebration." {
+    "
+    <p>
+    {{crime.detective.name}} drives as fast as he can to the police station,
+    ripe with pride. {{crime.detective.Sub}} bursts into the precinct, and
+    {{crime.detective.sub}} slams down {{crime.detective.det}} set of notes with
+    a circled bit of information. {{crime.detective.Sub}} calls for the chief of
+    police, and excitedly yells \"{{crime.murderer.name}} murdered
+    {{crime.victim.name}} at {{crime.scene.name}}! You can find our the killer
+    now at {{crime.hideout.name}}!\"
+    </p>
 
-        "<p>{{detective.name}} drives as fast as he can to the police station, ripe with pride. He bursts into the precinct,
-        and slams down his set of notes with a circled bit of information. He calls for the chief of police, and
-        excitedly yells \"{{murderer.name}} murdered {{victim.name}} at {{c.sceneName}}! You can find our the killer now at
-        {{hideout.name}}!\" The detective then turns around swiftly, smiles, and walks out the door, eager for another
-        case.</p>"
-    }
+    <p>
+    The detective then turns around swiftly, smiles, and walks out the door,
+    eager for another case.
+    </p>
+    "
+  }
 
-    strategy {
-        crime c, character detective, character murderer, character victim, environment hideout ?=
-            c.active == true &&
-            c.detectiveName == detective.name &&
-            c.murdererName == murderer.name &&
-            c.victimName == victim.name &&
-            c.hideoutName == hideout.name
-
-        "<p>{{detective.name}} takes a cab over to the police station, full of self-accomplishment and assurance that he was
-        the only one that could have solved this tricky crime. The cab pulls up, and he strolls into the precinct,
-        looking smugly at all the other police officers. {{detective.name}} waltzes into the chief of police's office and
-        gently places a piece of paper with the details of the case onto his large desk. He begins to walk out and just
-        before leaving, he says \"Oh yeah, {{murderer.name}} killed {{victim.name}} at {{c.sceneName}}. You can find
-        {{murderer.name}} at {{hideout.name}} and arrest our killer, if you want. Easy as pie.\"</p>"
-    }
+  strategy "Solve the crime with smugness." {
+    "
+    <p>
+    {{crime.detective.name}} takes a cab over to the police station, full of
+    self-accomplishment and assurance that {{crime.detective.sub}} was the only
+    one that could have solved this tricky crime. The cab pulls up, and
+    {{crime.detective.sub}} strolls into the precinct, looking smugly at all the
+    other police officers. {{crime.detective.name}} waltzes into the chief of
+    police's office and gently places a piece of paper with the details of the
+    case onto {{crime.detective.det}} large desk. {{crime.detective.Sub}} begins
+    to walk out and just before leaving, {{crime.detective.sub}} says \"Oh yeah,
+    {{crime.murderer.name}} killed {{crime.victim.name}} at
+    {{crime.scene.name}}. You can find {{crime.murderer.name}} at
+    {{crime.hideout.name}} and arrest our killer, if you want. Easy as pie.\"
+    </p>
+    "
+  }
 }
 
-goal capture() {
-    strategy {
-        crime c, character detective, character murderer, character victim, environment hideout ?=
-            c.active == true &&
-            c.detectiveName == detective.name &&
-            c.murdererName == murderer.name &&
-            c.victimName == victim.name &&
-            c.hideoutName == hideout.name
+goal capture(crime crime) "Capture the murderer." {
+  strategy "Capture alive." {
+    "
+    <p>
+    A dozen officers, at the orders of the chief, rush into cars and head over
+    to {{crime.hideout.name}}. When they get there, they are met with an odd
+    silence and no sign of {{crime.murderer.name}}. Guns drawn, they cautiously
+    search for the murderer, finding {{crime.murderer.name}} with hands up in
+    the air, awaiting {{crime.murderer.det}} inevitable fate. \"I knew I
+    couldn't escape the wit of {{crime.detective.name}}\",
+    {{crime.murderer.name}} says. \"{{crime.detective.Sub}}'s too good. I
+    confess - I killed {{crime.victim.name}}\". {{crime.murderer.Sub}} begins
+    to weep.
+    </p>
+    "
 
-        c.active := false
+    crime.active := false
+  }
 
-        "<p>A dozen officers, at the orders of the chief, rush into cars and head over to {{hideout.name}}. When they get
-        there, they are met with an odd silence, and no sign of {{murderer.name}}. Guns drawn, they cautiously search for
-        the murderer, finding {{murderer.name}} with hands up in the air, awaiting inevitable fate. \"I knew I couldn't
-        escape the wit of  {{detective.name}}\", {{murderer.name}} says. \"He's too good. I confess - I killed {{victim.name}}\". He
-        begins to weep.</p>"
-    }
+  strategy "Capture alive following fight." {
+    "
+    <p>
+    An entire fleet of cop cars filled with armed officers rushes over to
+    {{crime.hideout.name}} on the hunt to capture {{crime.murderer.name}}. Upon
+    arriving, they are immediately met with gunfire and threats. The officers
+    fire back, but over the chaotic explosions, {{crime.murderer.name}} curses
+    {{crime.detective.name}}'s name. A small group of officers sneak up from
+    behind and disarm {{crime.murderer.obj}} in a frantic split second.
+    \"Alright! I confess - I killed {{crime.victim.name}} and I would do it
+    again!\", {{crime.murderer.sub}} says.
+    </p>
+    "
 
-    strategy {
-        crime c, character detective, character murderer, character victim, environment hideout ?=
-            c.active == true &&
-            c.detectiveName == detective.name &&
-            c.murdererName == murderer.name &&
-            c.victimName == victim.name &&
-            c.hideoutName == hideout.name
-
-        c.active := false
-
-        "<p>An entire fleet of cop cars filled with armed officers rushes over to {{hideout.name}} on the hunt to capture
-        {{murderer.name}}. Upon arriving, they are immediately met with gunfire and threats. The officers fire back and
-        over the chaotic explosions you can hear {{murderer.name}} cursing {{detective.name}}'s name. A small group of
-        officers sneak up from behind and disarm the murderer in a frantic split second. \"Alright! I confess - I killed
-        {{victim.name}} and I would do it again!\", says {{murderer.name}} angrily, pinned to the ground.</p>"
-    }
+    crime.active := false
+  }
 }
-~
+
 goal attack(character victim) "Attack the victim." {
 
   strategy "Shoot the victim." {

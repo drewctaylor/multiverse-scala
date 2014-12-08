@@ -15,7 +15,7 @@ case class AttributeValueNumber(number: BigDecimal) extends AttributeValue
 
 case class AttributeValueSymbol(symbol: Symbol) extends AttributeValue
 
-case class AttributeValueSymbolOrdered(symbol: Symbol, symbolSequence: Seq[Symbol]) extends AttributeValue
+//case class AttributeValueSymbolOrdered(symbol: Symbol, symbolSequence: Seq[Symbol]) extends AttributeValue
 
 object AttributeValueOperation {
 
@@ -89,25 +89,25 @@ object AttributeValueOperation {
 
     def decrement(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = left.map(_.toSeq) match {
         case Some(Seq(AttributeValueNumber(l))) => Some(Set(AttributeValueNumber(l - 1)))
-        case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss((ss.indexOf(s) - 1) max 0), ss)))
+//        case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss((ss.indexOf(s) - 1) max 0), ss)))
         case _ => None
     }
 
     def increment(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = {
         left.map(_.toSeq) match {
             case Some(Seq(AttributeValueNumber(l))) => Some(Set(AttributeValueNumber(l + 1)))
-            case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss((ss.indexOf(s) + 1) min (ss.size - 1)), ss)))
+//            case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss((ss.indexOf(s) + 1) min (ss.size - 1)), ss)))
             case _ => None
         }
     }
 
     def decrementToMinimum(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = left.map(_.toSeq) match {
-        case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss.head, ss)))
+//        case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss.head, ss)))
         case _ => None
     }
 
     def incrementToMaximum(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = left.map(_.toSeq) match {
-        case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss.last, ss)))
+//        case Some(Seq(AttributeValueSymbolOrdered(s, ss))) => Some(Set(AttributeValueSymbolOrdered(ss.last, ss)))
         case _ => None
     }
 

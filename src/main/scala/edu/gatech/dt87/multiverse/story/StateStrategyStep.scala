@@ -10,6 +10,8 @@ import monocle.function._
 import monocle.std._
 import monocle.syntax._
 
+import scala.collection.immutable.Iterable
+
 object StateStrategyStep {
     type SymbolMap = Map[Symbol, (Symbol, Int)]
     type EventT = Event[State, SymbolMap, SymbolMap]
@@ -334,22 +336,23 @@ object StateStrategyStep {
 
 
     def narrate(statementNarration: StatementNarration): Event[State, SymbolMap, SymbolMap] = {
-        Event((state, x) => {
-            val turn: Map[String, Map[String, String]] = x.map((p) => p._1.name -> state.entitySetMap(p._2._1).entityMap(p._2._2).attributeMap.map((a) => a._1.name -> a._2.map({
-                case AttributeValueBoolean(boolean) => boolean
-                case AttributeValueEntity(entity) => s"""(${entity._1}, ${entity._2})"""
-                case AttributeValueNumber(number) => number
-                case AttributeValueSymbol(symbol) => symbol.name
-                case AttributeValueSymbolOrdered(symbol, symbolSet) => symbol.name
-            }).mkString(", ")))
+        Event((state, symbolMap) => {
 
-            val t = Handlebars(statementNarration.string.value)
+            val narrationTemplate = Handlebars(statementNarration.string.value)
 
-            val turnWithGender = turn.map((p) => {
-                p._1 -> p._2.foldLeft(Map[String, String]())((accumulator, pair) => {
-                    if (pair._1 == "gender") {
-                        pair._2 match {
-                            case "male" => accumulator + pair +
+            lazy val entityData: ((Symbol, Int)) => Map[String, Any] = (entity : (Symbol, Int)) => {
+                state.entitySetMap(entity._1).entityMap(entity._2).attributeMap.map(attribute => {
+                    attribute._1.name -> (attribute._2.toSeq match {
+                        case Seq(AttributeValueBoolean(boolean)) => boolean.toString
+                        case Seq(AttributeValueEntity(entityInner)) => entityData(entityInner)
+                        case Seq(AttributeValueNumber(number)) => number.toString()
+                        case Seq(AttributeValueSymbol(symbol)) => symbol.name
+                        case set => set
+                    })
+                }).foldLeft(Map[String, Any]())((accumulator, attribute) => {
+                    if (attribute._1 == "gender") {
+                        attribute._2 match {
+                            case "male" => accumulator + attribute +
                                 ("sub" -> "he") +
                                 ("Sub" -> "He") +
                                 ("obj" -> "him") +
@@ -360,7 +363,7 @@ object StateStrategyStep {
                                 ("Det" -> "His") +
                                 ("ref" -> "himself") +
                                 ("Ref" -> "Himself")
-                            case "female" => accumulator + pair +
+                            case "female" => accumulator + attribute +
                                 ("sub" -> "she") +
                                 ("Sub" -> "She") +
                                 ("obj" -> "her") +
@@ -371,7 +374,7 @@ object StateStrategyStep {
                                 ("Det" -> "Her") +
                                 ("ref" -> "herself") +
                                 ("Ref" -> "Herself")
-                            case "neuter" => accumulator + pair +
+                            case "neuter" => accumulator + attribute +
                                 ("sub" -> "it") +
                                 ("Sub" -> "It") +
                                 ("obj" -> "it") +
@@ -382,15 +385,19 @@ object StateStrategyStep {
                                 ("Det" -> "Its") +
                                 ("ref" -> "itself") +
                                 ("Ref" -> "Itself")
-                            case _ => accumulator + pair
+                            case _ => accumulator + attribute
                         }
                     } else {
-                        accumulator + pair
+                        accumulator + attribute
                     }
                 })
+            }
+
+            val narrationData = symbolMap.map(tuple => {
+                tuple._1.name -> entityData(tuple._2)
             })
 
-            Some(state.applyLens(State.focusNarration).modify(_ => Some(t(turnWithGender))), x)
+            Some(state.applyLens(State.focusNarration).modify(_ => Some(narrationTemplate(narrationData))), symbolMap)
         })
 
     }
