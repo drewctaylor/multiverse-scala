@@ -1,328 +1,459 @@
+~
+"Murder Mystery" is based on a story of the same name written for Wide Ruled:
+
+http://skorupski.org/wiki/wide_ruled/wide_ruled_v2
+~
+
+story "Murder Mystery!" 0
+
 state {
+  character john {
+    name := "John Smith"
+    potentialVictim := true
+    age := 34
+    hometown := "Brooklyn, New York"
+    gender := "male"
+    detective := false
+    alive := true
+  }
 
-    character john {
-        name := "John Smith"
-        potentialVictim := true
-        age := 34
-        hometown := "Brooklyn, New York"
-        gender := "male"
-        detective := false
-        alive := true
-    }
+  character jerry {
+    name := "Jerry Fontana"
+    potentialVictim := true
+    age := 45
+    hometown := "Seattle, Washington"
+    gender := "male"
+    detective := false
+    alive := true
+  }
 
-    character jerry {
-        name := "Jerry Fontana"
-        potentialVictim := true
-        age := 45
-        hometown := "Seattle, Washington"
-        gender := "male"
-        detective := false
-        alive := true
-    }
+  character cindy {
+    name := "Cindy Rollins"
+    potentialVictim := true
+    age := 28
+    hometown := "San Diego, California"
+    gender := "female"
+    detective := false
+    alive := true
+  }
 
-    character cindy {
-        name := "Cindy Rollins"
-        potentialVictim := true
-        age := 28
-        hometown := "San Diego, California"
-        gender := "female"
-        detective := false
-        alive := true
-    }
+  character gene {
+    name := "Gene Franks"
+    potentialVictim := true
+    age := 49
+    hometown := "Los Angeles, California"
+    gender := "male"
+    detective := false
+    alive := true
+  }
 
-    character gene {
-        name := "Gene Franks"
-        potentialVictim := true
-        age := 49
-        hometown := "Los Angeles, California"
-        gender := "male"
-        detective := false
-        alive := true
-    }
+  character rachel {
+    name := "Rachel Delores"
+    potentialVictim := true
+    age := 51
+    hometown := "Lyndhurst, New Jersey"
+    gender := "female"
+    detective := false
+    alive := true
+  }
 
-    character rachel {
-        name := "Rachel Delores"
-        potentialVictim := true
-        age := 51
-        hometown := "Lyndhurst, New Jersey"
-        gender := "female"
-        detective := false
-        alive := true
-    }
+  character dick {
+    name := "Dick Tracy"
+    potentialVictim := false
+    age := 39
+    hometown := "Noir City, Nowhere"
+    gender := "female"
+    detective := true
+    alive := true
+  }
 
-    character dick {
-        name := "Dick Tracy"
-        potentialVictim := false
-        age := 39
-        hometown := "Noir City, Nowhere"
-        gender := "female"
-        detective := true
-        alive := true
-    }
+  character sherlock {
+    name := "Sherlock Holmes"
+    potentialVictim := false
+    age := 42
+    hometown := "London, England"
+    gender := "male"
+    detective := true
+    alive := true
+  }
 
-    character sherlock {
-        name := "Sherlock Holmes"
-        potentialVictim := false
-        age := 42
-        hometown := "London, England"
-        gender := "male"
-        detective := true
-        alive := true
-    }
+  character miss {
+    name := "Miss Marple"
+    potentialVictim := false
+    age := 81
+    hometown := "London, England"
+    gender := "female"
+    detective := true
+    alive := true
+  }
 
-    environment docks {
-        name := "The Docks"
-        description := "the dirty, wet docks down by Porter street"
-        time := "9 pm"
-        witnesses := true
-        potentialMurderLocation := true
-    }
+  environment docks {
+    name := "the docks"
+    description := "the dirty, wet docks down by Porter street"
+    time := "9 pm"
+    witnesses := true
+    potentialMurderLocation := true
+  }
 
-    environment alleyway {
-        name := "The Alleyway"
-        description := "the dark, rat infested alley behind the liquor store on 15th street"
-        time := "2 am"
-        witnesses := false
-        potentialMurderLocation := true
-        owner := sherlock
-    }
+  environment alleyway {
+    name := "the alleyway"
+    description := "the dark, rat infested alley behind the liquor store on 15th street"
+    time := "2 am"
+    witnesses := false
+    potentialMurderLocation := true
+  }
 
-    environment park {
-        name := "The City Park"
-        description := "the large, open city park in the middle of the city"
-        time := "4 am"
-        witnesses := true
-        potentialMurderLocation := true
-        ownerName := alleyway.owner.name
-    }
+  environment park {
+    name := "the city park"
+    description := "the large, open park in the middle of the city"
+    time := "4 am"
+    witnesses := true
+    potentialMurderLocation := true
+  }
 
-    environment bar {
-        name := "The Shady Bar"
-        description := "the local smokey bar filled with neighborhood drunks"
-        time := "11 pm"
-        witnesses := true
-        potentialMurderLocation := false
-    }
+  environment bar {
+    name := "the shady bar"
+    description := "the local smokey bar, filled with neighborhood drunks"
+    time := "11 pm"
+    witnesses := true
+    potentialMurderLocation := false
+  }
 
-    john -> gene {
-        friend := 10
-    }
+  environment shack {
+    name := "the abandoned shack"
+    description := "the remotely located, burned-out old shack"
+    time := "8 pm"
+    witnesses := false
+    potentialMurderLocation := true
+  }
 
-    environment shack {
-        name := "The Abandoned Shack"
-        description := "the remotely located, burned out old shack"
-        time := "8 pm"
-        witnesses := false
-        potentialMurderLocation := true
-        meeting := (john->gene).friend
-    }
+  john -> gene {
+    friend := true
+  }
 
-    john -> jerry {
-        enemy := 3
-    }
+  john -> jerry {
+    enemy := true
+  }
 
-    john -> cindy {
-        coworker := 10
-    }
+  john -> cindy {
+    coworker := true
+  }
 
-    jerry -> gene {
-        friend := 10
-    }
+  jerry -> gene {
+    friend := true
+  }
 
-    jerry -> john {
-        enemy := 10
-    }
+  jerry -> john {
+    enemy := true
+  }
 
-    jerry -> rachel {
-        coworker := 10
-    }
+  jerry -> rachel {
+    coworker := true
+  }
 
-    cindy -> john {
-        friend := 10
-    }
+  cindy -> john {
+    friend := true
+  }
 
-    cindy -> jerry {
-        enemy := 2
-    }
+  cindy -> jerry {
+    enemy := true
+  }
 
-    cindy -> rachel {
-        coworker := 10
-    }
+  cindy -> rachel {
+    coworker := true
+  }
 
-    gene -> john {
-        friend := 10
-    }
+  gene -> john {
+    friend := true
+  }
 
-    gene -> cindy {
-        enemy := 20
-    }
+  gene -> cindy {
+    enemy := true
+  }
 
-    gene -> jerry {
-        coworker := 20
-    }
+  gene -> jerry {
+    coworker := 20
+  }
 
-    rachel -> john {
-        friend := 10
-    }
+  rachel -> john {
+    friend := true
+  }
 
-    rachel -> jerry {
-        enemy := 20
-    }
+  rachel -> jerry {
+    enemy := true
+  }
 
-    rachel -> cindy {
-        coworker := 10
-    }
+  rachel -> cindy {
+    coworker := true
+  }
 
-    docks -> shack {
-        nearbyLocation := 0
-    }
+  docks -> shack {
+    adjacent := true
+  }
 
-    alleyway -> docks {
-        nearbyLocation := 0
-    }
+  alleyway -> docks {
+    adjacent := true
+  }
 
-    park -> bar {
-        nearbyLocation := 0
-    }
+  park -> bar {
+    adjacent := true
+  }
 
-    shack -> docks {
-        nearbyLocation := 0
-    }
-
-    shack <-> docks {
-        adjacent := true
-    }
+  shack -> docks {
+    adjacent := true
+  }
 }
 
 
-goal murderMystery() {
-    strategy {
-        character victim ? !(victim.potentialVictim == true && victim.alive == true)
+goal murderMystery() "Tell Murder Mystery" {
 
-        "<div class='action'>No more victims to kill! The End!</div>"
+  strategy "No More Living Victims" {
+    character victim ?
+      victim.potentialVictim == true &&
+      victim.alive           == false
 
+    "
+    <p>
+    No more victims to kill! The End!
+    </p>
+    "
+  }
+
+  strategy "Tell Story" {
+    character victim, character detective ?=
+      victim.potentialVictim == true &&
+      victim.alive           == true &&
+      detective.detective    == true
+
+    crime crime {
+      victim := victim
+      detective := detective
+      active := true
     }
 
-    strategy {
-        character victim ?= victim.potentialVictim == true && victim.alive == true
-        character detective ?= detective.detective == true
+    "
+    <p>
+    Welcome to another episode of Murder Mystery!
+    </p>
+    "
 
-        "<div class='action'>Welcome to another episode of Murder Mystery!</div>"
+    crime(crime)
 
-        findVictim(victim)
-        findDetective(detective)
+    "
+    <p>
+    The facts: the victim is {{crime.victim.name}}, a
+    {{crime.victim.age}}-year-old {{crime.victim.gender}}.
+    </p>
+    "
 
-        "<div class='action'>The facts: the victim is {{victim.name}}, today.</div>"
-
-        investigate()
-        solve()
-        capture()
-
-        "<div class='action'>The End! Let's tell another Murder Mystery!</div>"
-    }
+    find(crime.detective)
+    investigate(crime)
+~
+    solve(crime)
+    capture(crime)
+~
+    "
+    <p>
+    The End!
+    </p>
+    "
+  }
 
 }
 
-goal findVictim(character victim) {
-    strategy {
-        character murderer ?= murderer != victim && murderer.detective == false
-        environment scene ?= scene.potentialMurderLocation == true
-        environment hideout ?= (scene->hideout).nearbyLocation == 0
+goal crime(crime crime) "Choose the murderer." {
 
-        "<div class='action'>The time {{scene.time}}. The place {{scene.description}}.</div>"
+  strategy "The murderer is a stranger." {
+    character murderer, environment scene, environment hideout ?=
+      murderer != crime.victim &&
+      murderer.detective == false &&
+      scene.potentialMurderLocation == true &&
+      (scene->hideout).adjacent == true
 
-        attack(victim)
+    crime.murderer := murderer
+    crime.scene    := scene
+    crime.hideout  := hideout
+    crime.active   := true
+    crime.clue     := 0
 
-        "<div class='action'>{{murderer.name}} appears out of the darkness as the evil murderer and escapes into the distance to seek
-         shelter from the inevitable eyes of the police.</div>"
+    "
+    <p>
+    The time: {{scene.time}}. The place: {{scene.description}}.
+    </p>
+    "
 
-        crime c {
-            victimName := victim.name
-            sceneName := scene.name
-            hideoutName := hideout.name
-            murdererName := murderer.name
-            active := true
-        }
-    }
+    attack(crime.victim)
+
+    "
+    <p>
+    {{murderer.name}} appears from the darkness - the murderer, a stranger to
+    the victim. {{murderer.Sub}} escapes into the distance to seek shelter from
+    the police.
+    </p>
+    "
+  }
+
+  strategy "The murderer is an enemy." {
+    character murderer, environment scene, environment hideout ?=
+      (crime.victim->murderer).enemy > 5 &&
+      scene.potentialMurderLocation == true &&
+      (scene->hideout).adjacent == true
+
+    crime.murderer := murderer
+    crime.scene    := scene
+    crime.hideout  := hideout
+    crime.active   := true
+
+    "
+    <p>
+    The time: {{scene.time}}. The place: {{scene.description}}.
+    </p>
+    "
+
+    attack(crime.victim)
+
+    "
+    <p>
+    {{murderer.name}} appears from the darkness - the murderer, an enemy of
+    the victim. {{murderer.Sub}} escapes into the distance to seek shelter from
+    the police.
+    </p>
+    "
+  }
+
 }
 
-goal findDetective(character detective) {
-    strategy {
-        crime c ?= c.active == true
-        c.detectiveName := detective.name
+goal find(character detective) "Find a detective." {
 
-        "<div class='action'>Cut to a quiet single bedroom apartment. The shrill ring of a phone awakens {{detective.name}}, {{detective.age}} from a deep and
-         relentless slumber.  {{detective.sub}} slowly opens his eyes, and knows exactly what the call brings. He accepts his fate
-         quickly, picks up the phone, and gathers the details about his new case. Once the call is finished, he gathers
-         is things, jumps in the car, and heads to the crime scene.</div>"
-    }
+  strategy "Find the detective at his home." {
+    "
+    <p>
+    Cut to a quiet, single bedroom apartment. The shrill ring of the phone
+    awakens {{detective.name}} from a deep, relentless slumber.
+    {{detective.Sub}} slowly opens {{detective.det}} eyes, and
+    {{detective.sub}} knows exactly what the call brings. {{detective.Sub}}
+    accepts {{detective.det}} fate, picks up the phone, and gathers the
+    details about {{detective.det}} new case. Once the call is finished,
+    {{detective.sub}} gathers {{detective.det}} things, jumps in the car,
+    and heads to the crime scene.
+    </p>
+    "
+  }
 
-    strategy {
-        crime c ?= c.active == true
-        c.detectiveName := detective.name
+  strategy "Find the detective at a bar" {
+    "
+    <p>
+    Cut to a shady dive in an ugly area of town. {{detective.name}} stumbles
+    from the bathroom and reseats himself on his favorite stool.
+    {{detective.Sub}} demands another scotch, but the bartender refuses,
+    angering {{detective.obj}} to no end.  Before {{detective.sub}} can object,
+    {{detective.det}} phone rings. It's the department, and {{detective.sub}}
+    has been waiting for a new case. {{detective.Sub}} answers the phone to
+    gather details, flees the bar, grabs a cab, and heads to the crime scene.
+    </p>
+    "
+  }
 
-        "<div class='action'>Cut to a shady dive in the not-so-pretty area of town. {{detective.name}} stumbles from the bathroom and
-         reseats himself on his favorite bar stool.  {{detective.sub}} demands another scotch, but the bartender refuses, angering
-         {{detective.name}} to no end. Before he can respond to the bartender's contention, his cell phone rings. It's
-         the department, and {{detective.name}} has been waiting for a new case. He picks up the phone to gather
-         details, flees the bar, grabs a cab, and heads over to the crime scene.</div>"
-    }
 }
 
-goal investigate() {
-    strategy {
-        crime c, character victim, character detective ?=
-            c.active == true &&
-            c.victimName == victim.name &&
-            c.detectiveName == detective.name
+goal investigate(crime crime) "Investigate the crime" {
 
-        "<div class='action'>{{detective.name}}  examines closely {{c.sceneName}} and finds a small piece of previously undiscovered evidence
-        on the body of {{victim.name}} that was conveniently overlooked by the CSI team.</div>"
-    }
+  strategy "End the investigation." {
+    environment other ?=
+      crime.hideout != other &&
+      crime.scene != other &&
+      crime.clue >= 5
 
-    strategy {
-        crime c, character victim, character detective, character friend, character murderer ?=
-            c.active == true &&
-            c.victimName == victim.name &&
-            c.detectiveName == detective.name &&
-            (victim->friend).friend != 0 &&
-            c.murdererName == murderer.name
+    "
+    <p>
+    Frustrated and out of ideas, {{crime.detective.name}} strolls to
+    {{other.name}} to think about the case. Suddenly, a spark ignites in
+    {{crime.detective.det}} mind, and all the evidence comes together -
+    {{crime.detective.sub}} has it!
+    </p>
+    "
+  }
 
-        "<div class='action'>{{detective.name}} decides to interview {{friend.name}}, a friend of {{victim.name}}, for any clues as to why our victim
-        was murdered. He finds that {{victim.name}} and {{murderer.name}} had a recent argument over money, and writes this
-        clue down.</div>"
-    }
+  strategy "Discover evidence." {
+    ? crime.clue < 5
 
-    strategy {
-        crime c, character victim, character detective, character coworker, character murderer, environment hideout ?=
-            c.active == true &&
-            c.victimName == victim.name &&
-            c.detectiveName == detective.name &&
-            (victim->coworker).coworker != 0 &&
-            c.murdererName == murderer.name &&
-            c.hideoutName == hideout.name
+    "
+    <p>
+    {{crime.detective.name}} examines {{crime.scene.name}} and discovers
+    evidence on the body of {{crime.victim.name}} that the CSI team
+    overlooked.
+    </p>
+    "
 
-        "<div class='action'>Now, {{detective.name}} makes a trip to the house of {{coworker.name}}, a coworker of {{victim.name}}. He talks to this
-        coworker and discovers that {{victim.name}} had been doing business with a supposedly former enemy, {{murderer.name}},
-        and had planned a trip out to {{hideout.name}} to pick up some equipment to sell.</div>"
-    }
+    crime.clue := crime.clue + 1
 
-    strategy {
-        crime c, character victim, character detective, character murderer, environment hideout ?=
-            c.active == true &&
-            c.victimName == victim.name &&
-            c.detectiveName == detective.name &&
-            c.murdererName == murderer.name &&
-            c.hideoutName == hideout.name
+    investigate(crime)
+  }
 
-        "<div class='action'>On a hunch, {{detective.name}} decides to checkout {{hideout.description}}, which is nearby the crime scene at
-        {{c.sceneName}}. There, he finds a potential murder weapon, and, conveniently, the personal ID of
-        {{murderer.name}}. This puzzles him greatly, and he decides to make note of this, just in case it is important
-        information.</div>"
+  strategy "Interview friend." {
+    character friend ?=
+      (crime.victim->friend).friend &&
+      friend.alive == true &&
+      crime.clue < 5
 
-    }
+    "
+    <p>
+    {{crime.detective.name}} decides to interview {{friend.name}}, a friend
+    of {{crime.victim.name}}, for any clues as to why our victim was murdered.
+    {{crime.detective.Sub}} finds that {{crime.victim.name}} and
+    {{crime.murderer.name}} had a recent argument over money, and
+    {{crime.detective.Sub}} writes this clue down.
+    </p>
+    "
+
+    crime.clue := crime.clue + 1
+
+    investigate(crime)
+  }
+
+  strategy "Interview coworker." {
+    character coworker ?=
+      (crime.victim->coworker).coworker &&
+      coworker.alive == true &&
+      crime.clue < 5
+
+    "
+    <p>
+    {{crime.detective.name}} goes to the house of {{coworker.name}}, a coworker
+    of {{crime.victim.name}}. {{crime.detective.Sub}} talks to {{coworker.obj}}
+    and discovers that {{crime.victim.name}} had been doing business with a
+    former enemy, {{crime.murderer.name}}, and {{crime.victim.sub}} had planned
+    a trip to {{crime.hideout.name}} to pick up some equipment to sell.
+    </p>
+    "
+
+    crime.clue := crime.clue + 1
+
+    investigate(crime)
+  }
+
+  strategy "Investigate hideout." {
+    ?= crime.clue < 5
+
+    "
+    <p>
+    On a hunch, {{crime.detective.name}} decides to check out
+    {{crime.hideout.description}}, which is near {{crime.scene.name}}. There,
+    {{crime.detective.sub}} finds a potential murder weapon, and the personal ID
+    of {{crime.murderer.name}}. This puzzles him greatly, and
+    {{crime.detective.sub}} decides to make note of this, in case it is
+    important information.
+    </p>
+    "
+
+    crime.clue := crime.clue + 1
+
+    investigate(crime)
+  }
+
 }
 
+~
 goal solve() {
     strategy {
         crime c, character detective, character murderer, character victim, environment hideout ?=
@@ -332,11 +463,11 @@ goal solve() {
             c.victimName == victim.name &&
             c.hideoutName == hideout.name
 
-        "<div class='action'>{{detective.name}} drives as fast as he can to the police station, ripe with pride. He bursts into the precinct,
+        "<p>{{detective.name}} drives as fast as he can to the police station, ripe with pride. He bursts into the precinct,
         and slams down his set of notes with a circled bit of information. He calls for the chief of police, and
-        excitedly yells '{{murderer.name}} murdered {{victim.name}} at {{c.sceneName}}! You can find our the killer now at
-        {{hideout.name}}!' The detective then turns around swiftly, smiles, and walks out the door, eager for another
-        case.</div>"
+        excitedly yells \"{{murderer.name}} murdered {{victim.name}} at {{c.sceneName}}! You can find our the killer now at
+        {{hideout.name}}!\" The detective then turns around swiftly, smiles, and walks out the door, eager for another
+        case.</p>"
     }
 
     strategy {
@@ -347,12 +478,12 @@ goal solve() {
             c.victimName == victim.name &&
             c.hideoutName == hideout.name
 
-        "<div class='action'>{{detective.name}} takes a cab over to the police station, full of self-accomplishment and assurance that he was
+        "<p>{{detective.name}} takes a cab over to the police station, full of self-accomplishment and assurance that he was
         the only one that could have solved this tricky crime. The cab pulls up, and he strolls into the precinct,
         looking smugly at all the other police officers. {{detective.name}} waltzes into the chief of police's office and
         gently places a piece of paper with the details of the case onto his large desk. He begins to walk out and just
-        before leaving, he says 'Oh yeah, {{murderer.name}} killed {{victim.name}} at {{c.sceneName}}. You can find
-        {{murderer.name}} at {{hideout.name}} and arrest our killer, if you want. Easy as pie.'</div>"
+        before leaving, he says \"Oh yeah, {{murderer.name}} killed {{victim.name}} at {{c.sceneName}}. You can find
+        {{murderer.name}} at {{hideout.name}} and arrest our killer, if you want. Easy as pie.\"</p>"
     }
 }
 
@@ -367,11 +498,11 @@ goal capture() {
 
         c.active := false
 
-        "<div class='action'>A dozen officers, at the orders of the chief, rush into cars and head over to {{hideout.name}}. When they get
+        "<p>A dozen officers, at the orders of the chief, rush into cars and head over to {{hideout.name}}. When they get
         there, they are met with an odd silence, and no sign of {{murderer.name}}. Guns drawn, they cautiously search for
-        the murderer, finding {{murderer.name}} with hands up in the air, awaiting inevitable fate. 'I knew I couldn't
-        escape the wit of  {{detective.name}}', {{murderer.name}} says. 'He's too good. I confess - I killed {{victim.name}}'. He
-        begins to weep.</div>"
+        the murderer, finding {{murderer.name}} with hands up in the air, awaiting inevitable fate. \"I knew I couldn't
+        escape the wit of  {{detective.name}}\", {{murderer.name}} says. \"He's too good. I confess - I killed {{victim.name}}\". He
+        begins to weep.</p>"
     }
 
     strategy {
@@ -384,26 +515,39 @@ goal capture() {
 
         c.active := false
 
-        "<div class='action'>An entire fleet of cop cars filled with armed officers rushes over to {{hideout.name}} on the hunt to capture
+        "<p>An entire fleet of cop cars filled with armed officers rushes over to {{hideout.name}} on the hunt to capture
         {{murderer.name}}. Upon arriving, they are immediately met with gunfire and threats. The officers fire back and
         over the chaotic explosions you can hear {{murderer.name}} cursing {{detective.name}}'s name. A small group of
-        officers sneak up from behind and disarm the murderer in a frantic split second. 'Alright! I confess - I killed
-        {{victim.name}} and I would do it again!', says {{murderer.name}} angrily, pinned to the ground.</div>"
+        officers sneak up from behind and disarm the murderer in a frantic split second. \"Alright! I confess - I killed
+        {{victim.name}} and I would do it again!\", says {{murderer.name}} angrily, pinned to the ground.</p>"
     }
 }
+~
+goal attack(character victim) "Attack the victim." {
 
-goal attack(character victim) {
-    strategy {
-        "<div class='action'>{{victim.name}} turns around suddenly at the sound of the click. Just as {{victim.name}} notices the gleam of a
-         barrel, a loud bang erupts and our victim falls flat to the ground, coughing and sputtering up the last but of
-         an ending life.</div>"
+  strategy "Shoot the victim." {
+    "
+    <p>
+    At the sudden sound of a click, {{victim.name}} turns around.
+    {{victim.Sub}} sees the gleam of a barrel, and a loud bang erupts. Our
+    victim falls to the ground, coughing and sputtering the last breaths of
+    life.
+    </p>
+    "
 
-        victim.alive := false
-    }
-    strategy {
-        "<div class='action'>From the darkness, a large, sharp blade thrusts at {{victim.name}}, resulting in a deadly blow. Our victim
-         falls to the floor in pain, and fades away quickly as the live drains from the dying body.</div>"
+    victim.alive := false
+  }
 
-        victim.alive := false
-    }
+  strategy "Stab the victim." {
+    "
+    <p>
+    From the darkness, a long, sharp blade thrusts at {{victim.name}}. The
+    deadly blow sends {{victim.obj}} to the floor in pain. {{victim.Sub}} fades
+    away as {{victim.det}} life drains from {{victim.det}} dying body.
+    </p>
+    "
+
+    victim.alive := false
+  }
+
 }

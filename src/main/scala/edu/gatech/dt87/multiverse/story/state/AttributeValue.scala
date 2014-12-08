@@ -64,11 +64,11 @@ object AttributeValueOperation {
     }
 
     def lessThan(right: Option[Set[AttributeValue]])(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = {
-        nnb((l, r) => l > r)(right)(left)
+        nnb((l, r) => l < r)(right)(left)
     }
 
     def lessThanOrEqual(right: Option[Set[AttributeValue]])(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = {
-        nnb((l, r) => l >= r)(right)(left)
+        nnb((l, r) => l <= r)(right)(left)
     }
 
     def add(right: Option[Set[AttributeValue]])(left: Option[Set[AttributeValue]]): Option[Set[AttributeValue]] = {
