@@ -4,7 +4,7 @@ import java.nio.file.StandardCopyOption._
 import sbt.Keys._
 
 assembly := {
-    val assemblyValue = assembly.value
+    val assemblyValue = sbtassembly.AssemblyKeys.assembly.value
     Files.copy(assemblyValue.toPath, Paths.get(".").resolve(assemblyValue.toPath.getFileName), REPLACE_EXISTING)
     assemblyValue
 }
@@ -22,6 +22,6 @@ lazy val root = (project in file(".")).
             "org.scalacheck" %% "scalacheck" % "1.12.0" % "test",
             "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"),
         mainClass.in(sbtassembly.AssemblyKeys.assembly) := Some("edu.gatech.dt87.multiverse.ui.Main"),
-        assemblyJarName.in(sbtassembly.AssemblyKeys.assembly) := "multiverse.jar"
+        sbtassembly.AssemblyKeys.assemblyJarName.in(sbtassembly.AssemblyKeys.assembly) := "multiverse.jar"
     )
 
