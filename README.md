@@ -13,4 +13,4 @@ Where `story.multiverse` is a Multiverse source file.
 Writing Multiverse
 ------------------
 
-TO write Multiverse, you may use [https://atom.io/](Atom), a simple text editor. 
+To write Multiverse, you may use any text editor.  We recommend the [https://atom.io](Atom) text editor with the [https://github.com/atom/language-javascript](multiverse language support).
