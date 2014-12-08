@@ -2,6 +2,7 @@ import java.nio.file.{Paths, Files}
 import java.nio.file.StandardCopyOption._
 
 import sbt.Keys._
+import sbtassembly.AssemblyPlugin.autoImport._
 
 assembly := {
     val assemblyValue = assembly.value
