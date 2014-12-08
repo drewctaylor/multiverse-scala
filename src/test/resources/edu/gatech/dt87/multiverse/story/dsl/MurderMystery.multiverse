@@ -308,7 +308,6 @@ goal crime(crime crime) "Choose the murderer." {
 
   strategy "The murderer is an enemy." {
     character murderer, environment scene, environment hideout ?=
-      (crime.victim->murderer).enemy == true &&
       scene.potentialMurderLocation == true &&
       (scene->hideout).adjacent == true
 
