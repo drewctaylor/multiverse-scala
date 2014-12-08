@@ -21,7 +21,7 @@ lazy val root = (project in file(".")).
             "com.github.julien-truffaut" %% "monocle-macro" % "0.5.1",
             "org.scalacheck" %% "scalacheck" % "1.12.0" % "test",
             "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"),
-        mainClass in assembly := Some("edu.gatech.dt87.multiverse.ui.Main"),
-        assemblyJarName in assembly := "multiverse.jar"
+        mainClass.in(assembly) := Some("edu.gatech.dt87.multiverse.ui.Main"),
+        assemblyJarName.in(assembly) := "multiverse.jar"
     )
 
