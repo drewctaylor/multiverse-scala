@@ -1,11 +1,9 @@
 package edu.gatech.dt87.multiverse.ui
 
-import edu.gatech.dt87.multiverse.planner.{Fabula, EventExecution, Goal, Planner}
+import edu.gatech.dt87.multiverse.planner._
 import edu.gatech.dt87.multiverse.prettyPrinter.PrettyPrinter
 import edu.gatech.dt87.multiverse.story.StateStrategyStep.SymbolMap
 import edu.gatech.dt87.multiverse.story.state.State
-import monocle.function._
-import monocle.std._
 import monocle.syntax._
 
 case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]]) {
@@ -53,8 +51,31 @@ case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]])
 
     def satisfyGoal(stateId: String, goalId: String): String = {
         val state = stateForId(stateId).applyLens(State.focusNarration).set(None)
-        val goalExecution = goalForId(goalId).satisfy(state, Map[Symbol, (Symbol, Int)]())
-        val fabula = "[" + (Fabula.fabula(goalExecution): Seq[EventExecution[State, _, _]]).map((eventContext: EventExecution[State, _, _]) => { s"""{"eventName":"${eventContext.event.label}","stateId":"${idForStateHelper(eventContext.successor().get._1)}","narration":"${eventContext.successor().get._1.narration.map(_.replace('\n', ' ')).getOrElse("")}"}"""}).mkString(",") + "]"
+
+// temporary fix until we can find a better way to ensure that the goal we know can be satisfied is satisfied.
+//        val goalExecution = goalForId(goalId).satisfy(state, Map[Symbol, (Symbol, Int)]())
+//        val eventExecutionSequence = Fabula.fabula(goalExecution)
+
+        var stateNext: Option[(State, Any)] = None
+        var goalExecution: GoalExecution[State, SymbolMap, SymbolMap] = null
+        var eventExecutionSequence: Seq[EventExecution[State, _, _]] = null
+
+        while (!stateNext.isDefined) {
+            goalExecution = goalForId(goalId).satisfy(state, Map[Symbol, (Symbol, Int)]())
+            eventExecutionSequence = Fabula.fabula(goalExecution)
+            stateNext = eventExecutionSequence.headOption.map(_.successor()).flatten
+        }
+
+        val fabula = "[" + eventExecutionSequence.map(eventContext => {
+            eventContext.successor().map(successor => {
+                s"""{ "eventName" : "${eventContext.event.label}" , "stateId" : "${idForStateHelper(successor._1)}" , "narration" : "${
+                    successor._1.narration.map(text => {
+                        text.replace('\n', ' ')
+                    }).getOrElse("")
+                }"}"""
+            }).getOrElse("")
+        }).mkString(",") + "]"
+
         val ret = s"""{ "goalId" : "$goalId", "goalExecution" : ${PrettyPrinter.json(goalExecution)}, "fabula" : $fabula }"""
 
         println(PrettyPrinter.print(goalExecution))

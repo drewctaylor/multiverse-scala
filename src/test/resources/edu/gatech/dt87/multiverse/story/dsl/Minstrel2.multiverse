@@ -64,7 +64,7 @@ goal checkConsistencyGoal {
 
 
 
-
+~
 goal eat(character c) {}
 goal control(character c, object o) {}
 goal go(character c, location l) {}
@@ -168,3 +168,4 @@ links
     thwarts
     supersedes
     reaction
+~

@@ -1,3 +1,5 @@
+~
+
 given a character goal related to the character's health and part of the plot of the story, (alp-check-scene-for-suspense)
     add suspense
 
@@ -110,3 +112,4 @@ alp-check-affects-others (not implemented)
 
 alp-check-affects-others
 
+~
