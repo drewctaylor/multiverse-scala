@@ -39,10 +39,10 @@ case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]])
     }
 
     def satisfiableGoalSet(stateId: String): String = {
-        println(PrettyPrinter.print(state, 0))
+        println(PrettyPrinter.print(stateForId(stateId), 0))
 
         goalSet.map(goal => {
-            println(PrettyPrinter.print(goal.satisfy(state, Map[Symbol, (Symbol, Int)]())))
+            println(PrettyPrinter.print(goal.satisfy(stateForId(stateId), Map[Symbol, (Symbol, Int)]())))
         })
 
         val ret = "[" + Planner.satisfiableGoalSet(stateForId(stateId), Map[Symbol, (Symbol, Int)](), goalSet).map((goal: Goal[State, SymbolMap, SymbolMap]) => { s"""{"goalId":"${idForGoalHelper(goal)}","goalName":"${goal.label}"}"""}).mkString(",") + "]"
