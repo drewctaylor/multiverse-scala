@@ -1,0 +1,38 @@
+story "Once Upon a Time" 0
+
+state {
+
+  character aurora {
+    name := "Aurora"
+  }
+
+  character phillip {
+    name := "Phillip"
+  }
+
+}
+
+goal tell() "Tell Story" {
+
+  strategy "Marriage" {
+    character c1, character c2 ?=
+      c1 != c2 &&
+      (c1<->c2).marriage == empty
+
+    "<p>Once upon a time, {{c1.name}} and {{c2.name}}
+     met and married."
+
+    (c1<->c2).marriage := true
+  }
+
+  strategy "Happily Ever After" {
+    character c1, character c2 ?
+      c1 == c2 ||
+      (c1<->c2).marriage == true
+      =
+      (c1<->c2).marriage == true
+
+    "<p>{{c1.name}} and {{c2.name}} lived happily
+     ever after.</p>"
+  }
+}
