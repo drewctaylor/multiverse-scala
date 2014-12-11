@@ -10,6 +10,8 @@ To run Multiverse, download `multiverse.jar` and run the following from the comm
 
 Where `story.multiverse` is a Multiverse source file.
 
+Multiverse requires [Java 8](http://www.java.com).
+
 Writing Multiverse
 ------------------
 
