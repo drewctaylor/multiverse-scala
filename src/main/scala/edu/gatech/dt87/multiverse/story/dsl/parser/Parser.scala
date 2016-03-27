@@ -372,7 +372,7 @@ object Parser extends TokenParsers with LexerTokens {
     }
 
     /**
-     * A map from a token that represents an assignment operator to the assignment operator.
+     * A map from a token that represents an assignment operator to the assignment operator itself.
      */
     val operatorAssignmentMap: Map[Elem, OperatorAssignment] = Map(
         lexical.TokenOperatorAssignmentInsert -> OperatorAssignmentInsert,
@@ -380,7 +380,7 @@ object Parser extends TokenParsers with LexerTokens {
         lexical.TokenOperatorAssignmentUpdate -> OperatorAssignmentUpdate
     )
     /**
-     * A map from a token that represents a binary operator to the binary operator.
+     * A map from a token that represents a binary operator to the binary operator itself.
      */
     val operatorBinaryMap: Map[Elem, OperatorBinary] = Map(
         lexical.TokenOperatorAddition -> OperatorAddition,
@@ -403,7 +403,7 @@ object Parser extends TokenParsers with LexerTokens {
     )
 
     /**
-     * A map from a token that represents a unary operator to the unary operator.
+     * A map from a token that represents a unary operator to the unary operator itself.
      */
     val operatorUnaryMap: Map[Elem, OperatorUnary] = Map(
         lexical.TokenOperatorCardinality -> OperatorCardinality,

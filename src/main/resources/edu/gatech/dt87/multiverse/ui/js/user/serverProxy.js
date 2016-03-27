@@ -1,15 +1,21 @@
 define(function() {
     return {
-        initial : function() {
-            return JSON.parse(server.initial());
+        initial : function(f) {
+            $.get("initial", function(data) {
+                f(JSON.parse(data))
+            });
         },
 
-        satisfiableGoalSet: function (stateId) {
-            return JSON.parse(server.satisfiableGoalSet(stateId));
+        satisfiableGoalSet: function (stateId, f) {
+            $.get("satisfiableGoalSet/" + stateId, function(data) {
+                f(JSON.parse(data))
+            });
         },
 
-        satisfyGoal: function (stateId, goalId) {
-            return JSON.parse(server.satisfyGoal(stateId, goalId));
+        satisfyGoal: function (stateId, goalId, f) {
+            $.get("satisfyGoal/" + stateId + "/" + goalId, function(data) {
+                f(JSON.parse(data))
+            });
         }
     };
 });
