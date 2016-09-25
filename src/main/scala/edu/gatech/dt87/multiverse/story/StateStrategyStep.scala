@@ -70,18 +70,18 @@ object StateStrategyStep {
         statementAssignment match {
             case StatementAssignmentQualified(left, right, OperatorAssignmentUpdate) =>
                 Event((state, symbolMap) =>
-                    StateLocation.resolve(state, symbolMap, left).map(location =>
-                        State.update(state, location, AttributeValueOperation.evaluateExpression(state, symbolMap, right)).map((_, symbolMap))).flatten)
+                    StateLocation.resolve(state, symbolMap, left).flatMap(location =>
+                        State.update(state, location, AttributeValueOperation.evaluateExpression(state, symbolMap, right)).map((_, symbolMap))))
 
             case StatementAssignmentQualified(left, right, OperatorAssignmentInsert) =>
                 Event((state, symbolMap) =>
-                    StateLocation.resolve(state, symbolMap, left).map(location =>
-                        State.insert(state, location, AttributeValueOperation.evaluateExpression(state, symbolMap, right)).map((_, symbolMap))).flatten)
+                    StateLocation.resolve(state, symbolMap, left).flatMap(location =>
+                        State.insert(state, location, AttributeValueOperation.evaluateExpression(state, symbolMap, right)).map((_, symbolMap))))
 
             case StatementAssignmentQualified(left, right, OperatorAssignmentRemove) =>
                 Event((state, symbolMap) =>
-                    StateLocation.resolve(state, symbolMap, left).map(location =>
-                        State.remove(state, location, AttributeValueOperation.evaluateExpression(state, symbolMap, right)).map((_, symbolMap))).flatten)
+                    StateLocation.resolve(state, symbolMap, left).flatMap(location =>
+                        State.remove(state, location, AttributeValueOperation.evaluateExpression(state, symbolMap, right)).map((_, symbolMap))))
         }
     }
 

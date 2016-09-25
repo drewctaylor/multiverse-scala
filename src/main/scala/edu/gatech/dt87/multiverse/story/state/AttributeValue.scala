@@ -273,16 +273,16 @@ object AttributeValueOperation {
                 StateLocation.resolve(state, symbolMap, i) match {
                     case Some(StateLocationAttribute(StateLocationEntity(entity), attribute)) =>
                         val entitySetOption = state.entitySetMap.get(entity._1) // should be Some
-                        val entityOption = entitySetOption.map(_.entityMap.get(entity._2)).flatten // should be Some
-                        entityOption.map(_.attributeMap.get(attribute)).flatten orElse Some(Set())
+                        val entityOption = entitySetOption.flatMap(_.entityMap.get(entity._2)) // should be Some
+                        entityOption.flatMap(_.attributeMap.get(attribute)) orElse Some(Set())
 
                     case Some(StateLocationAttribute(StateLocationRelationshipBidirectional(StateLocationEntity(left), StateLocationEntity(right)), attribute)) =>
                         val entityOption = state.relationshipBidirectionalMap.get((left, right)) // should be Some
-                        entityOption.map(_.attributeMap.get(attribute)).flatten orElse Some(Set())
+                        entityOption.flatMap(_.attributeMap.get(attribute)) orElse Some(Set())
 
                     case Some(StateLocationAttribute(StateLocationRelationshipUnidirectional(StateLocationEntity(left), StateLocationEntity(right)), attribute)) =>
                         val entityOption = state.relationshipUnidirectionalMap.get((left, right)) // should be Some
-                        entityOption.map(_.attributeMap.get(attribute)).flatten orElse Some(Set())
+                        entityOption.flatMap(_.attributeMap.get(attribute)) orElse Some(Set())
 
                     case Some(StateLocationEntity(entity)) =>
                         Some(Set(AttributeValueEntity(entity)))

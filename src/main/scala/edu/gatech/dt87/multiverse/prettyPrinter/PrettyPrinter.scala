@@ -77,7 +77,7 @@ object PrettyPrinter {
     }
 
     def json[S, X, Y](strategyExecution: StrategyExecution[S, X, Y]): String = {
-        s"""{ "strategy" : "${strategyExecution.strategy.label}", "result" : "${if (strategyExecution.successor().isDefined) "Success" else "Failure"}", "strategyStepExecution" : [ """ + strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence.map(json(_)).mkString(",") + " ] }"
+        s"""{ "strategy" : "${strategyExecution.strategy.label}", "result" : "${if (strategyExecution.successor().isDefined) "Success" else "Failure"}", "strategyStepExecution" : [ """ + strategyExecution.strategyStepExecutionSequence.strategyStepExecutionSequence().map(json(_)).mkString(",") + " ] }"
     }
 
     def json[S, Y](noExecution: NoExecution[S, Y]): String = {

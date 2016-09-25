@@ -140,7 +140,7 @@ object StateLocation {
 
             case symbol :: symbolSequenceRest =>
                 val entityOption = state.relationshipUnidirectionalMap.get((left, right))
-                val attributeValueSetOption = entityOption.map(_.attributeMap.get(symbol)).flatten
+                val attributeValueSetOption = entityOption.flatMap(_.attributeMap.get(symbol))
                 val attributeValueSeqOption = attributeValueSetOption.map(_.toSeq)
 
                 attributeValueSeqOption match {
@@ -183,8 +183,8 @@ object StateLocation {
 
             case symbol :: symbolSequenceRest =>
                 val entitySetOption = state.entitySetMap.get(entity._1) // should be Some
-                val entityOption = entitySetOption.map(_.entityMap.get(entity._2)).flatten // should be Some
-                val attributeValueSetOption = entityOption.map(_.attributeMap.get(symbol)).flatten // should be Some
+                val entityOption = entitySetOption.flatMap(_.entityMap.get(entity._2)) // should be Some
+                val attributeValueSetOption = entityOption.flatMap(_.attributeMap.get(symbol)) // should be Some
                 val attributeValueSeqOption = attributeValueSetOption.map(_.toSeq) // may be None
 
                 attributeValueSeqOption match {
@@ -212,22 +212,22 @@ object StateLocation {
         resolve(state, symbolMap, identifier) match {
             case Some(StateLocationAttribute(StateLocationEntity(entity), attribute)) =>
                 val entitySetOption = state.entitySetMap.get(entity._1)
-                val entityOption = entitySetOption.map(_.entityMap.get(entity._2)).flatten
-                val attributeValueSetOption = entityOption.map(_.attributeMap.get(attribute)).flatten
+                val entityOption = entitySetOption.flatMap(_.entityMap.get(entity._2))
+                val attributeValueSetOption = entityOption.flatMap(_.attributeMap.get(attribute))
                 val attributeValueSeqOption = attributeValueSetOption.map(_.toSeq)
 
                 helper(attributeValueSeqOption)
 
             case Some(StateLocationAttribute(StateLocationRelationshipBidirectional(StateLocationEntity(left), StateLocationEntity(right)), attribute)) =>
                 val entityOption = state.relationshipBidirectionalMap.get((left, right))
-                val attributeValueSetOption = entityOption.map(_.attributeMap.get(attribute)).flatten
+                val attributeValueSetOption = entityOption.flatMap(_.attributeMap.get(attribute))
                 val attributeValueSeqOption = attributeValueSetOption.map(_.toSeq)
 
                 helper(attributeValueSeqOption)
 
             case Some(StateLocationAttribute(StateLocationRelationshipUnidirectional(StateLocationEntity(left), StateLocationEntity(right)), attribute)) =>
                 val entityOption = state.relationshipUnidirectionalMap.get((left, right))
-                val attributeValueSetOption = entityOption.map(_.attributeMap.get(attribute)).flatten
+                val attributeValueSetOption = entityOption.flatMap(_.attributeMap.get(attribute))
                 val attributeValueSeqOption = attributeValueSetOption.map(_.toSeq)
 
                 helper(attributeValueSeqOption)

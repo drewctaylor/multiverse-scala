@@ -40,7 +40,7 @@ trait LexerTokens extends Tokens {
                     chars.forall(!_.isLetterOrDigit))
         ).contains(_))
 
-        if (invalid.size > 0) throw new RuntimeException( s"""A reserved token must not contain whitespace and must consist of only letters or only punctuation: "${invalid.mkString("\", \"")}".""")
+        if (invalid.nonEmpty) throw new RuntimeException( s"""A reserved token must not contain whitespace and must consist of only letters or only punctuation: "${invalid.mkString("\", \"")}".""")
 
         /**
          * @return a sequence of strings, any one of which represents the reserved identifier or operator token

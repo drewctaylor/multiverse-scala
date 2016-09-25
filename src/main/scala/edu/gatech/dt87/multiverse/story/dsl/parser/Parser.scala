@@ -107,7 +107,7 @@ object Parser extends TokenParsers with LexerTokens {
     }
 
     /**
-     * A parser that matches a block of qualified asssignment statements.
+     * A parser that matches a block of qualified assignment statements.
      */
     lazy val statementAssignmentQualifiedList: Parser[List[StatementAssignmentQualified]] = statementAssignmentEntity | statementAssignmentRelationship | statementAssignmentQualified
 
@@ -226,7 +226,7 @@ object Parser extends TokenParsers with LexerTokens {
     lazy val operatorAdditive: Parser[Elem] = lexical.TokenOperatorAddition | lexical.TokenOperatorSubtraction
 
     /**
-     * A parser that matches a mutiplication or division expression.
+     * A parser that matches a multiplication or division expression.
      */
     lazy val expressionMultiplicative: Parser[Expression] = expressionUnary ~ rep(operatorMultiplicative ~ expressionUnary) ^^ {
         case el ~ eList => eList.foldLeft(el)((expression, operationExpression) => operationExpression match {

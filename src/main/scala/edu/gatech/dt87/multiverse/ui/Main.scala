@@ -40,7 +40,7 @@ object Main extends Object {
     if (argument.length == 1) {
       val source = io.Source.fromFile(argument(0)).mkString
       val parsed = Compiler.compile(source)
-      val server = parsed.map((tuple) => new Server(tuple._1, tuple._2))
+      val server = parsed.map((tuple) => Server(tuple._1, tuple._2))
       server.foreach(s =>
         BlazeBuilder
           .bindHttp(8080, "localhost")

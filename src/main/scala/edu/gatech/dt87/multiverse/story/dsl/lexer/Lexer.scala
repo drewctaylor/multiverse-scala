@@ -138,5 +138,5 @@ class Lexer extends Scanners with LexerTokens {
      * @param characterSequence a character sequence
      * @return a parser that matches any character except those in the given character sequence
      */
-    def except(characterSequence: Char*): Parser[Elem] = elem("except $characterSequence", character => characterSequence forall (character != _))
+    def except(characterSequence: Char*): Parser[Elem] = elem("except $characterSequence", character => !characterSequence.contains(character))
 }

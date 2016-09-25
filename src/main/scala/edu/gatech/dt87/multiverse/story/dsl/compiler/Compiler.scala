@@ -194,9 +194,9 @@ object Compiler {
                     })
 
                     if(stateOption.isDefined) {
-                        Some(stateOption.get._1, goalList.filter(_._2.parameterList.size == 0).map(_._1).toSet)
+                       (stateOption.get._1, goalList.filter(_._2.parameterList.isEmpty).map(_._1).toSet)
                     } else {
-                        Some(State(), goalList.filter(_._2.parameterList.size == 0).map(_._1).toSet)
+                       (State(), goalList.filter(_._2.parameterList.isEmpty).map(_._1).toSet)
                     }
 
                 })

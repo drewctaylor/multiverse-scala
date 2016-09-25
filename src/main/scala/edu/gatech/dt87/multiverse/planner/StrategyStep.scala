@@ -48,7 +48,7 @@ sealed trait StrategyStep[S, X, Y] {
          */
         def satisfy(state: S, input: X): StrategyStepExecution[S, Z] = {
             val satisfyHelper: (StrategyStepExecution[S, Y]) => StrategyStepExecution[S, Z] = (strategyStepExecution) => strategyStepExecution.successor() match {
-                case None => strategyStepExecution merge new NoExecution()
+                case None => strategyStepExecution merge NoExecution()
                 case Some((successorState, output)) => strategyStepExecution merge right.satisfy(successorState, output)
             }
 
