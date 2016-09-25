@@ -1,6 +1,6 @@
-package edu.gatech.dt87.multiverse.story.dsl
+package edu.gatech.dt87.multiverse.language
 
-import edu.gatech.dt87.multiverse.story.dsl.compiler.Compiler
+import edu.gatech.dt87.multiverse.language.compiler.Compiler
 import org.scalatest.FlatSpec
 
 class CompilerSpec extends FlatSpec {

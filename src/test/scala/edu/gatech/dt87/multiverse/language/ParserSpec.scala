@@ -1,6 +1,6 @@
-package edu.gatech.dt87.multiverse.story.dsl
+package edu.gatech.dt87.multiverse.language
 
-import edu.gatech.dt87.multiverse.story.dsl.parser.Parser
+import edu.gatech.dt87.multiverse.language.parser.Parser
 import org.scalatest.FlatSpec
 
 class ParserSpec extends FlatSpec {

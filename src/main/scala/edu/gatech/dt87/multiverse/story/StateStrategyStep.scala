@@ -4,7 +4,7 @@ import com.gilt.handlebars.scala.Handlebars
 import com.gilt.handlebars.scala.binding.dynamic._
 import edu.gatech.dt87.multiverse.planner._
 import edu.gatech.dt87.multiverse.predicate.Predicate
-import edu.gatech.dt87.multiverse.story.dsl.parser._
+import edu.gatech.dt87.multiverse.language.parser._
 import edu.gatech.dt87.multiverse.story.state._
 import monocle.function._
 import monocle.std._

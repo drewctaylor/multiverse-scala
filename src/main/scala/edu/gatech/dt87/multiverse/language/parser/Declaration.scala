@@ -1,4 +1,4 @@
-package edu.gatech.dt87.multiverse.story.dsl.parser
+package edu.gatech.dt87.multiverse.language.parser
 
 /**
  * A declaration: either a story, a state, a goal, or a strategy declaration.

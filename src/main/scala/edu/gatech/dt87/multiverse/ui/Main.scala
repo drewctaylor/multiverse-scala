@@ -1,6 +1,6 @@
 package edu.gatech.dt87.multiverse.ui
 
-import edu.gatech.dt87.multiverse.story.dsl.compiler.Compiler
+import edu.gatech.dt87.multiverse.language.compiler.Compiler
 import org.http4s.HttpService
 import org.http4s.dsl.{Root, _}
 import org.http4s.server._

@@ -1,9 +1,9 @@
-package edu.gatech.dt87.multiverse.story.dsl.compiler
+package edu.gatech.dt87.multiverse.language.compiler
 
 import edu.gatech.dt87.multiverse.planner.{Goal, Strategy}
 import edu.gatech.dt87.multiverse.story.StateStrategyStep
 import edu.gatech.dt87.multiverse.story.StateStrategyStep._
-import edu.gatech.dt87.multiverse.story.dsl.parser._
+import edu.gatech.dt87.multiverse.language.parser._
 import edu.gatech.dt87.multiverse.story.state.State
 import monocle.function._
 import monocle.std._

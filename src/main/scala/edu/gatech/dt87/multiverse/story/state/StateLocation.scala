@@ -1,7 +1,7 @@
 package edu.gatech.dt87.multiverse.story.state
 
 import edu.gatech.dt87.multiverse.story.StateStrategyStep.SymbolMap
-import edu.gatech.dt87.multiverse.story.dsl.parser._
+import edu.gatech.dt87.multiverse.language.parser._
 
 /**
  * A location is an attribute or an attribute owner.
