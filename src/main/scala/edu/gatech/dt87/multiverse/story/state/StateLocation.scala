@@ -95,7 +95,7 @@ object StateLocation {
 
             case symbol :: identifierSeqRest =>
                 val entityOption = state.relationshipBidirectionalMap.get((left, right))
-                val attributeValueSetOption = entityOption.map(_.attributeMap.get(symbol)).flatten
+                val attributeValueSetOption = entityOption.flatMap(_.attributeMap.get(symbol))
                 val attributeValueSeqOption = attributeValueSetOption.map(_.toSeq)
 
                 attributeValueSeqOption match {

@@ -41,7 +41,7 @@ case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]])
     def satisfiableGoalSet(stateId: String): String = {
         println(PrettyPrinter.print(stateForId(stateId), 0))
 
-        goalSet.map(goal => {
+        goalSet.foreach(goal => {
             println(PrettyPrinter.print(goal.satisfy(stateForId(stateId), Map[Symbol, (Symbol, Int)]())))
         })
 
@@ -60,10 +60,10 @@ case class Server(state: State, goalSet: Set[Goal[State, SymbolMap, SymbolMap]])
         var goalExecution: GoalExecution[State, SymbolMap, SymbolMap] = null
         var eventExecutionSequence: Seq[EventExecution[State, _, _]] = null
 
-        while (!stateNext.isDefined) {
+        while (stateNext.isEmpty) {
             goalExecution = goalForId(goalId).satisfy(state, Map[Symbol, (Symbol, Int)]())
             eventExecutionSequence = Fabula.fabula(goalExecution)
-            stateNext = eventExecutionSequence.headOption.map(_.successor()).flatten
+            stateNext = eventExecutionSequence.headOption.flatMap(_.successor())
         }
 
         val fabula = "[" + eventExecutionSequence.map(eventContext => {

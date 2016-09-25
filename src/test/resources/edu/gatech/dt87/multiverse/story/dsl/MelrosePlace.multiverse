@@ -38,10 +38,6 @@ state {
       child := alison
     }
 
-    (amanda<->billy).child ->amanda.father {
-      marriage := true
-    }
-
     ~ Alison Parker ~
 
     character alison {
@@ -51,7 +47,6 @@ state {
         gender := "female"
         orientation := "male"
         age := 30
-        test := jane
     }
 
     ~ Jane Andrews ~
@@ -216,7 +211,6 @@ goal divorce () "Divorce Scene" {
         "<p>{{c1.first}} and {{c2.first}} divorce.</p>"
     }
 }
-
 
 goal forcedMarriage() "Forced Marriage Plot" {
   strategy {

@@ -9,6 +9,8 @@ import monocle.function._
 import monocle.std._
 import monocle.syntax._
 
+import scalaz.{Failure, NonEmptyList, Success, Validation}
+
 object Compiler {
 
     def sortGenerator(seedOption: Option[LiteralNumber]): Set[StrategyT] => Seq[StrategyT] = {
@@ -23,24 +25,22 @@ object Compiler {
         }
     }
 
-    def static(declarationStory: DeclarationStory): Option[DeclarationStory] = {
+    def static(declarationStory: DeclarationStory): Validation[NonEmptyList[String], DeclarationStory] = {
         val goalList = declarationStory.goalList
-        val goalIdentifierList = goalList.map(goal => {
-            goal.identifier
-        })
+        val goalIdentifierList = goalList.map(_.identifier)
         val goalParameterListSizeMap = goalList.map(goal => {
             goal.identifier -> goal.parameterList.size
         }).toMap
 
-        val subgoalList = goalList.map(goal => {
-            goal.strategySet.map(strategy => {
+        val subgoalList = goalList.flatMap(goal => {
+            goal.strategySet.flatMap(strategy => {
                 strategy.statementList.filter(statement => {
                     statement.isInstanceOf[StatementSubgoal]
                 }).map(statement => {
                     statement.asInstanceOf[StatementSubgoal]
                 })
-            }).flatten
-        }).flatten
+            })
+        })
 
         val subgoalArgumentListSizeMap = subgoalList.map(subgoal => {
             subgoal.goal -> subgoal.parameterList.size
@@ -56,39 +56,40 @@ object Compiler {
 
         val subgoalArgumentListSizeMustMatchGoalParameterListSize = subgoalList.foldLeft(List[String]())((messageList, subgoal) => {
             goalParameterListSizeMap.get(subgoal.goal) match {
-                case Some(i) => {
+                case Some(i) =>
                     if (i == subgoalArgumentListSizeMap(subgoal.goal)) {
                         messageList
                     } else {
                         messageList :+ s"""The length of the argument list does not match the length of the parameter list of the goal "${subgoal.goal.name}"; it is ${subgoalArgumentListSizeMap(subgoal.goal)}, but it should be $i."""
                     }
-                }
                 case None => messageList
             }
         })
 
         val messageList = subgoalMustReferenceGoal ++ subgoalArgumentListSizeMustMatchGoalParameterListSize
 
-        if (messageList.size == 0) {
+        if (messageList.isEmpty) {
 
-            Some(declarationStory)
+            Success(declarationStory)
 
         } else {
 
-            messageList.map(message => {
-                println(message)
-            })
-
-            None
+            Failure(NonEmptyList.nel(messageList.head, messageList.tail))
         }
     }
 
-    def compile(source: String): Option[(State, Set[GoalT])] = {
+    def compileOther(source: String): Validation[NonEmptyList[String], (State, Set[GoalT])] = {
+
+        Success((State(), Set[GoalT]()))
+    }
+
+    def compile(source: String): Validation[NonEmptyList[String], (State, Set[GoalT])] =
+
         Parser.phrase(Parser.unit)(new Parser.lexical.Scanner(source)) match {
 
             case Parser.Success(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList), next) =>
 
-                if (static(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList)).isDefined) {
+                static(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList)).map[(State, Set[GoalT])](declarationStory => {
 
                     val sort = sortGenerator(seedOption)
 
@@ -114,7 +115,7 @@ object Compiler {
                         Goal(sort, Seq(stateStrategy))
                     })
 
-                    val state = if(titleOption.isDefined) {
+                    val state = if (titleOption.isDefined) {
                         State(Some(titleOption.get.value))
                     } else {
                         State()
@@ -124,16 +125,16 @@ object Compiler {
                         stateGoal.satisfy(state, Map[Symbol, (Symbol, Int)]())
                     })
 
-                    val stateOption = stateGoalExecutionOption.map(stateGoalExecution => {
+                    val stateOption = stateGoalExecutionOption.flatMap(stateGoalExecution => {
                         stateGoalExecution.successor()
-                    }).flatten
+                    })
 
                     lazy val goalFor: Symbol => (Goal[State, SymbolMap, SymbolMap], DeclarationGoal) = (symbol) => {
                         goalList.filter(tuple => tuple._2.identifier == symbol).head
                     }
 
                     lazy val goalList = goalDeclarationList.map(goalDeclaration => {
-                        if(goalDeclaration.label.isDefined) {
+                        if (goalDeclaration.label.isDefined) {
                             (Goal(goalDeclaration.label.get.value, sort, goalDeclaration.strategySet.map(strategyDeclaration => {
                                 val strategyStepList = strategyDeclaration.statementList.filter(statement => {
                                     statement.isInstanceOf[StatementAssignmentQualified]
@@ -151,10 +152,10 @@ object Compiler {
 
                                     case s: StatementQuery =>
                                         StateStrategyStep.query(s)
-//
-//                                    case s: StatementAssignmentUnqualified =>
-//                                        println("An unqualified assignment statement may not appear here.")
-//                                        None
+                                    //
+                                    //                                    case s: StatementAssignmentUnqualified =>
+                                    //                                        println("An unqualified assignment statement may not appear here.")
+                                    //                                        None
                                 })
 
                                 val strategyStep = strategyStepList.reduce((a: StrategyStepT, b: StrategyStepT) => {
@@ -198,15 +199,12 @@ object Compiler {
                         Some(State(), goalList.filter(_._2.parameterList.size == 0).map(_._1).toSet)
                     }
 
-                } else {
-                    None
-                }
+                })
 
             case Parser.NoSuccess(message, next) =>
-                println(message, next.pos)
-                None
+
+                Failure(NonEmptyList.nels(message))
 
         }
-    }
 
 }
