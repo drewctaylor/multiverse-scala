@@ -1,11 +1,14 @@
 package edu.gatech.dt87.multiverse.story.state
 
+import edu.gatech.dt87.multiverse.language.`type`.Gender
 import edu.gatech.dt87.multiverse.story.StateStrategyStep
 import edu.gatech.dt87.multiverse.language.parser._
 
 import scala.collection.immutable.Set
 
 sealed trait AttributeValue
+
+case class AttributeValueGender(gender : Gender) extends AttributeValue
 
 case class AttributeValueBoolean(boolean: Boolean) extends AttributeValue
 
@@ -268,6 +271,9 @@ object AttributeValueOperation {
 
             case LiteralString(value) =>
                 Some(Set(AttributeValueSymbol(Symbol(value))))
+
+            case LiteralGender(value) =>
+                Some(Set(AttributeValueGender(value)))
 
             case i: IdentifierAttributeQualified =>
                 StateLocation.resolve(state, symbolMap, i) match {

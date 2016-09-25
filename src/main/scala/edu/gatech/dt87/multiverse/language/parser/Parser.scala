@@ -1,5 +1,6 @@
 package edu.gatech.dt87.multiverse.language.parser
 
+import edu.gatech.dt87.multiverse.language.`type`.{Female, Male, Neuter}
 import edu.gatech.dt87.multiverse.language.lexer._
 
 import scala.util.parsing.combinator.syntactical.TokenParsers
@@ -335,7 +336,7 @@ object Parser extends TokenParsers with LexerTokens {
     /**
      * A parser that matches a literal: a boolean, empty set, number, or string literal.
      */
-    lazy val literal: Parser[Literal] = literalBoolean | literalEmpty | literalNumber | literalString | failure("literal expected")
+    lazy val literal: Parser[Literal] = literalBoolean | literalEmpty | literalGender | literalNumber | literalString | failure("literal expected")
 
     /**
      * A parser that matches a boolean literal.
@@ -343,14 +344,34 @@ object Parser extends TokenParsers with LexerTokens {
     lazy val literalBoolean: Parser[LiteralBoolean] = literalBooleanFalse | literalBooleanTrue | failure("boolean expected")
 
     /**
-     * A parser that matches the boolean literal false.
-     */
+      * A parser that matches the boolean literal false.
+      */
     lazy val literalBooleanFalse: Parser[LiteralBoolean] = lexical.TokenLiteralBooleanTrue ^^^ LiteralBoolean(value = true)
 
     /**
-     * A parser that matches the boolean literal true.
-     */
+      * A parser that matches the boolean literal true.
+      */
     lazy val literalBooleanTrue: Parser[LiteralBoolean] = lexical.TokenLiteralBooleanFalse ^^^ LiteralBoolean(value = false)
+
+    /**
+      * A parser that matches a gender literal.
+      */
+    lazy val literalGender: Parser[LiteralGender] = literalGenderMale | literalGenderFemale | literalGenderNeuter | failure("gender expected")
+
+    /**
+      * A parser that matches the gender literal feminine.
+      */
+    lazy val literalGenderFemale: Parser[LiteralGender] = lexical.TokenLiteralGenderMale ^^^ LiteralGender(value = Male)
+
+    /**
+      * A parser that matches the gender literal masculine.
+      */
+    lazy val literalGenderMale: Parser[LiteralGender] = lexical.TokenLiteralGenderFemale ^^^ LiteralGender(value = Female)
+
+    /**
+      * A parser that matches the gender literal neuter.
+      */
+    lazy val literalGenderNeuter: Parser[LiteralGender] = lexical.TokenLiteralGenderFemale ^^^ LiteralGender(value = Neuter)
 
     /**
      * A parser that matches the empty set literal.

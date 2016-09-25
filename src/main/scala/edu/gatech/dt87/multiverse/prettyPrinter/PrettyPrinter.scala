@@ -44,6 +44,7 @@ object PrettyPrinter {
             case AttributeValueBoolean(value) => value.toString
             case AttributeValueEntity(key) => jsonEntityKey(key)
             case AttributeValueNumber(value) => value.toString()
+            case AttributeValueGender(value) => s""""${value.toString}""""
             case AttributeValueSymbol(value) => s""""${value.name}""""
         }).mkString(",") + "]"
     }
@@ -164,6 +165,7 @@ object PrettyPrinter {
             case AttributeValueEntity(e) => s"""(${e._1.name}, ${e._2})"""
             case AttributeValueNumber(n) => s"""($n)"""
             case AttributeValueSymbol(s) => s""""${s.name}""""
+            case AttributeValueGender(s) => s""""${s.toString}""""
             case a => s"""$a"""
         }
     }

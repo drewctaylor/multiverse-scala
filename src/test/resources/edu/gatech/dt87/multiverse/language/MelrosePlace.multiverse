@@ -8,8 +8,8 @@ state {
       life := "alive"
       first := "Amanda"
       last := "Woodward"
-      gender := "female"
-      orientation := "male"
+      gender := female
+      orientation := male
       age := 30
       father := palmer
     }
@@ -20,7 +20,7 @@ state {
       life := "alive"
       first := "Palmer"
       last := "Woodward"
-      gender := "male"
+      gender := male
       orientation := "female"
       age := 60
     }
@@ -44,8 +44,8 @@ state {
         life := "alive"
         first := "Alison"
         last := "Parker"
-        gender := "female"
-        orientation := "male"
+        gender := female
+        orientation := male
         age := 30
     }
 
@@ -55,8 +55,8 @@ state {
         life := "alive"
         first := "Jane"
         last := "Andrews"
-        gender := "female"
-        orientation := "male"
+        gender := female
+        orientation := male
         age := 30
     }
 
@@ -66,8 +66,8 @@ state {
         life := "alive"
         first := "Jake"
         last := "Hanson"
-        gender := "male"
-        orientation := "male" union "female"
+        gender := male
+        orientation := male union female
         age := 30
     }
 
@@ -77,8 +77,8 @@ state {
         life := "alive"
         first := "Billy"
         last := "Campbell"
-        gender := "male"
-        orientation := "female"
+        gender := male
+        orientation := female
         age := 30
     }
 
@@ -88,8 +88,8 @@ state {
         life := "alive"
         first := "Matt"
         last := "Fielding"
-        gender := "male"
-        orientation := "male"
+        gender := male
+        orientation := male
         age := 30
     }
 
@@ -99,8 +99,8 @@ state {
         life := "alive"
         first := "Peter"
         last := "Burns"
-        gender := "male"
-        orientation := "female"
+        gender := male
+        orientation := female
         age := 30
     }
 
@@ -110,8 +110,8 @@ state {
         life := "alive"
         first := "Michael"
         last := "Mancini"
-        gender := "male"
-        orientation := "female"
+        gender := male
+        orientation := female
         age := 30
     }
 
@@ -121,8 +121,8 @@ state {
         life := "alive"
         first := "Sydney"
         last := "Andrews"
-        gender := "female"
-        orientation := "male" union "female"
+        gender := female
+        orientation := male union female
         age := 30
     }
 
@@ -132,8 +132,8 @@ state {
         life := "alive"
         first := "Kimberly"
         last := "Shaw"
-        gender := "female"
-        orientation := "male" union "female"
+        gender := female
+        orientation := male union female
         age := 30
     }
 

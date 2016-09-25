@@ -2,6 +2,7 @@ package edu.gatech.dt87.multiverse.story
 
 import com.gilt.handlebars.scala.Handlebars
 import com.gilt.handlebars.scala.binding.dynamic._
+import edu.gatech.dt87.multiverse.language.`type`.{Female, Male, Neuter}
 import edu.gatech.dt87.multiverse.planner._
 import edu.gatech.dt87.multiverse.predicate.Predicate
 import edu.gatech.dt87.multiverse.language.parser._
@@ -347,12 +348,13 @@ object StateStrategyStep {
                         case Seq(AttributeValueEntity(entityInner)) => entityData(entityInner)
                         case Seq(AttributeValueNumber(number)) => number.toString()
                         case Seq(AttributeValueSymbol(symbol)) => symbol.name
+                        case Seq(AttributeValueGender(gender)) => gender
                         case set => set
                     })
                 }).foldLeft(Map[String, Any]())((accumulator, attribute) => {
                     if (attribute._1 == "gender") {
                         attribute._2 match {
-                            case "male" => accumulator + attribute +
+                            case Male => accumulator + attribute +
                                 ("sub" -> "he") +
                                 ("Sub" -> "He") +
                                 ("obj" -> "him") +
@@ -363,7 +365,7 @@ object StateStrategyStep {
                                 ("Det" -> "His") +
                                 ("ref" -> "himself") +
                                 ("Ref" -> "Himself")
-                            case "female" => accumulator + attribute +
+                            case Female => accumulator + attribute +
                                 ("sub" -> "she") +
                                 ("Sub" -> "She") +
                                 ("obj" -> "her") +
@@ -374,7 +376,7 @@ object StateStrategyStep {
                                 ("Det" -> "Her") +
                                 ("ref" -> "herself") +
                                 ("Ref" -> "Herself")
-                            case "neuter" => accumulator + attribute +
+                            case Neuter => accumulator + attribute +
                                 ("sub" -> "it") +
                                 ("Sub" -> "It") +
                                 ("obj" -> "it") +

@@ -97,6 +97,9 @@ trait LexerTokens extends Tokens {
         TokenKeywordStrategy,
         TokenLiteralBooleanTrue,
         TokenLiteralBooleanFalse,
+        TokenLiteralGenderFemale,
+        TokenLiteralGenderMale,
+        TokenLiteralGenderNeuter,
         TokenLiteralEmpty)
 
     /**
@@ -205,6 +208,12 @@ trait LexerTokens extends Tokens {
     case object TokenLiteralBooleanFalse extends TokenReserved("false")
 
     case object TokenLiteralEmpty extends TokenReserved("empty")
+
+    case object TokenLiteralGenderMale extends TokenReserved("male")
+
+    case object TokenLiteralGenderFemale extends TokenReserved("female")
+
+    case object TokenLiteralGenderNeuter extends TokenReserved("neuter")
 
     case class TokenLiteralString(chars: String) extends TokenAbstract
 
