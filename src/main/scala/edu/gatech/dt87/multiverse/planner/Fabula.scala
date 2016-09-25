@@ -1,8 +1,5 @@
 package edu.gatech.dt87.multiverse.planner
 
-/**
-* Created by drewtaylor on 10/1/14.
-*/
 object Fabula {
 
     def fabula[S, X, Y](goalExecution : GoalExecution[S, X, Y]) : Seq[EventExecution[S, _, _]] = {

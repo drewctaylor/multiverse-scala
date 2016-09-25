@@ -3,9 +3,6 @@
 //import edu.gatech.dt87.scalaverse.random._
 //import edu.gatech.dt87.scalaverse.story.character.StringExtension._
 //
-///**
-// * Created by dt87 on 10/15/14.
-// */
 //object CharacterNameSource {
 //    val firstIteratorFor = prepareFirst("first.csv")
 //    val lastIterator = prepareLast("last.csv")
