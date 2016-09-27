@@ -9,9 +9,87 @@ import monocle.function._
 import monocle.std._
 import monocle.syntax._
 
+import scala.collection.immutable.Iterable
 import scalaz.{Failure, NonEmptyList, Success, Validation}
 
 object Compiler {
+
+    def validateGoalList(declarationStory: DeclarationStory): List[String] = {
+
+        if (declarationStory.goalList.isEmpty) {
+
+            List("The story must include at least one goal.")
+
+        } else {
+
+            List()
+        }
+    }
+
+    def validateGoalSymbolUnique(declarationStory: DeclarationStory): List[String] = {
+
+        declarationStory.goalList.map(goal => goal.identifier)
+            .groupBy(symbol => symbol)
+            .filter(tuple => tuple._2.size > 1)
+            .flatMap(tuple => List(s"The goal ${tuple._1} may appear at most once."))
+            .toList
+    }
+
+    def validateGoalParameterListUnique(declarationStory: DeclarationStory): List[String] = {
+
+        declarationStory.goalList.flatMap(goal =>
+            goal.parameterList.map(parameter => parameter._2)
+                .groupBy(symbol => symbol)
+                .filter(tuple => tuple._2.size > 1)
+                .flatMap(tuple => List(s"The goal ${goal.identifier} may include at most one parameter ${tuple._1}")))
+    }
+
+    def validateSubgoalName(declarationStory: DeclarationStory): List[String] = {
+
+        declarationStory.goalList.flatMap(goal =>
+            goal.strategySet.flatMap(strategy => strategy.statementList)
+                .filter(statement => {
+                    statement.isInstanceOf[StatementSubgoal]
+                }).map(statement => {
+                statement.asInstanceOf[StatementSubgoal]
+            }))
+            .map(subgoal => subgoal.goal)
+            .filter(identifier => !declarationStory.goalList.map(goal => goal.identifier).contains(identifier))
+            .flatMap(identifier => List(s"The subgoal $identifier does not reference a goal."))
+    }
+
+    def validateSubgoalParameterList(declarationStory: DeclarationStory): List[String] = {
+
+        declarationStory.goalList.flatMap(goal =>
+            goal.strategySet.flatMap(strategy => strategy.statementList)
+                .filter(statement => {
+                    statement.isInstanceOf[StatementSubgoal]
+                }).map(statement => {
+                statement.asInstanceOf[StatementSubgoal]
+            }))
+            .filter(subgoal => declarationStory.goalList.map(goal => goal.identifier).contains(subgoal.goal))
+            .map(subgoal => (subgoal, subgoal.parameterList.size - declarationStory.goalList.filter(goal => goal.identifier == subgoal.goal).head.parameterList.size))
+            .filter(tuple => tuple._2 != 0)
+            .flatMap(tuple => List(s"The subogal ${tuple._1.goal} must have ${tuple._1.parameterList.size - tuple._2} parameters, not ${tuple._1.parameterList.size}."))
+    }
+
+    def validate(declarationStory: DeclarationStory): Validation[NonEmptyList[String], DeclarationStory] = {
+
+        val list = validateGoalList(declarationStory) :::
+            validateGoalSymbolUnique(declarationStory) :::
+            validateGoalParameterListUnique(declarationStory) :::
+            validateSubgoalName(declarationStory) :::
+            validateSubgoalParameterList(declarationStory)
+
+        if (list.isEmpty) {
+
+            Success(declarationStory)
+
+        } else {
+
+            Failure(NonEmptyList.nel(list.head, list.tail))
+        }
+    }
 
     def sortGenerator(seedOption: Option[LiteralNumber]): Set[StrategyT] => Seq[StrategyT] = {
         val random = seedOption.map(seed => {
@@ -25,59 +103,6 @@ object Compiler {
         }
     }
 
-    def static(declarationStory: DeclarationStory): Validation[NonEmptyList[String], DeclarationStory] = {
-        val goalList = declarationStory.goalList
-        val goalIdentifierList = goalList.map(_.identifier)
-        val goalParameterListSizeMap = goalList.map(goal => {
-            goal.identifier -> goal.parameterList.size
-        }).toMap
-
-        val subgoalList = goalList.flatMap(goal => {
-            goal.strategySet.flatMap(strategy => {
-                strategy.statementList.filter(statement => {
-                    statement.isInstanceOf[StatementSubgoal]
-                }).map(statement => {
-                    statement.asInstanceOf[StatementSubgoal]
-                })
-            })
-        })
-
-        val subgoalArgumentListSizeMap = subgoalList.map(subgoal => {
-            subgoal.goal -> subgoal.parameterList.size
-        }).toMap
-
-        val subgoalMustReferenceGoal = subgoalList.foldLeft(List[String]())((messageList, subgoal) => {
-            if (goalIdentifierList.contains(subgoal.goal)) {
-                messageList
-            } else {
-                messageList :+ s"""The identifier "${subgoal.goal.name}" does not reference a goal."""
-            }
-        })
-
-        val subgoalArgumentListSizeMustMatchGoalParameterListSize = subgoalList.foldLeft(List[String]())((messageList, subgoal) => {
-            goalParameterListSizeMap.get(subgoal.goal) match {
-                case Some(i) =>
-                    if (i == subgoalArgumentListSizeMap(subgoal.goal)) {
-                        messageList
-                    } else {
-                        messageList :+ s"""The length of the argument list does not match the length of the parameter list of the goal "${subgoal.goal.name}"; it is ${subgoalArgumentListSizeMap(subgoal.goal)}, but it should be $i."""
-                    }
-                case None => messageList
-            }
-        })
-
-        val messageList = subgoalMustReferenceGoal ++ subgoalArgumentListSizeMustMatchGoalParameterListSize
-
-        if (messageList.isEmpty) {
-
-            Success(declarationStory)
-
-        } else {
-
-            Failure(NonEmptyList.nel(messageList.head, messageList.tail))
-        }
-    }
-
     def compileOther(source: String): Validation[NonEmptyList[String], (State, Set[GoalT])] = {
 
         Success((State(), Set[GoalT]()))
@@ -85,11 +110,11 @@ object Compiler {
 
     def compile(source: String): Validation[NonEmptyList[String], (State, Set[GoalT])] =
 
-        Parser.phrase(Parser.unit)(new Parser.lexical.Scanner(source)) match {
+        Parser.phrase(Parser.declarationStory)(new Parser.lexical.Scanner(source)) match {
 
             case Parser.Success(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList), next) =>
 
-                static(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList)).map[(State, Set[GoalT])](declarationStory => {
+                validate(DeclarationStory(titleOption, seedOption, stateDeclarationOption, goalDeclarationList)).map[(State, Set[GoalT])](declarationStory => {
 
                     val sort = sortGenerator(seedOption)
 
@@ -193,10 +218,10 @@ object Compiler {
                         }
                     })
 
-                    if(stateOption.isDefined) {
-                       (stateOption.get._1, goalList.filter(_._2.parameterList.isEmpty).map(_._1).toSet)
+                    if (stateOption.isDefined) {
+                        (stateOption.get._1, goalList.filter(_._2.parameterList.isEmpty).map(_._1).toSet)
                     } else {
-                       (State(), goalList.filter(_._2.parameterList.isEmpty).map(_._1).toSet)
+                        (State(), goalList.filter(_._2.parameterList.isEmpty).map(_._1).toSet)
                     }
 
                 })
