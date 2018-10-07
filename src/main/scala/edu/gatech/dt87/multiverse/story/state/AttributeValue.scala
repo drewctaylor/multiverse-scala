@@ -1,7 +1,7 @@
 package edu.gatech.dt87.multiverse.story.state
 
 import edu.gatech.dt87.multiverse.story.StateStrategyStep
-import edu.gatech.dt87.multiverse.story.dsl.parser._
+import edu.gatech.dt87.multiverse.language.parser._
 
 import scala.collection.immutable.Set
 

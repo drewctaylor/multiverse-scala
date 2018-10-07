@@ -1,7 +1,7 @@
-package edu.gatech.dt87.multiverse.story.dsl.parser
+package edu.gatech.dt87.multiverse.language.parser
 
-import edu.gatech.dt87.multiverse.story.dsl.lexer._
-import edu.gatech.dt87.multiverse.story.dsl.parser
+import edu.gatech.dt87.multiverse.language.lexer._
+import edu.gatech.dt87.multiverse.language.parser
 
 import scala.util.parsing.combinator.syntactical.TokenParsers
 

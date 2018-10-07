@@ -1,4 +1,4 @@
-package edu.gatech.dt87.multiverse.story.dsl.lexer
+package edu.gatech.dt87.multiverse.language.lexer
 
 import scala.util.parsing.combinator.lexical.Scanners
 

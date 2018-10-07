@@ -1,7 +1,7 @@
 package edu.gatech.dt87.multiverse.ui
 
 import cats.effect.IO
-import edu.gatech.dt87.multiverse.story.dsl.compiler.Compiler
+import edu.gatech.dt87.multiverse.language.compiler.Compiler
 import fs2.Stream
 import fs2.StreamApp
 import fs2.StreamApp.ExitCode

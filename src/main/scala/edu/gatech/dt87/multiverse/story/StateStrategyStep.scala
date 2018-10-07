@@ -3,7 +3,7 @@ package edu.gatech.dt87.multiverse.story
 import edu.gatech.dt87.multiverse.mustache.Mustache
 import edu.gatech.dt87.multiverse.planner._
 import edu.gatech.dt87.multiverse.predicate.Predicate
-import edu.gatech.dt87.multiverse.story.dsl.parser._
+import edu.gatech.dt87.multiverse.language.parser._
 import edu.gatech.dt87.multiverse.story.state._
 import monocle.syntax.all._
 

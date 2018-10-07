@@ -1,4 +1,4 @@
-package edu.gatech.dt87.multiverse.story.dsl.parser
+package edu.gatech.dt87.multiverse.language.parser
 
 sealed trait Statement
 
