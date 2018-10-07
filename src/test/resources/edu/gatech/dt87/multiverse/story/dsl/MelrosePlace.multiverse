@@ -38,7 +38,7 @@ state {
       child := alison
     }
 
-    (amanda<->billy).child ->amanda.father {
+    (amanda<->billy).child -> amanda.father {
       marriage := true
     }
 
@@ -51,7 +51,6 @@ state {
         gender := "female"
         orientation := "male"
         age := 30
-        test := jane
     }
 
     ~ Jane Andrews ~
@@ -158,6 +157,8 @@ goal life (character c) "Character Life" {
 
     strategy "Resurrect" {
         ?= c.life == "dead"
+
+        c.life := "alive"
 
         "<p>{{c.first}} returns to Melrose Place, very much alive.</p>"
     }

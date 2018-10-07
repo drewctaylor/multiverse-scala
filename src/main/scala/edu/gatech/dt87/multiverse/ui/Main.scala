@@ -1,56 +1,50 @@
 package edu.gatech.dt87.multiverse.ui
 
+import cats.effect.IO
 import edu.gatech.dt87.multiverse.story.dsl.compiler.Compiler
-import org.http4s.HttpService
-import org.http4s.dsl.{Root, _}
-import org.http4s.server._
-import org.http4s.server.staticcontent.ResourceService.Config
+import fs2.Stream
+import fs2.StreamApp
+import fs2.StreamApp.ExitCode
+import org.http4s.dsl.impl.Root
+import org.http4s.dsl.io._
 import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.{HttpService, StaticFile}
+import org.http4s.server.blaze._
+import scala.concurrent.ExecutionContext.Implicits.global
 
-object Main extends Object {
-  private val static = cachedResource(Config("/edu/gatech/dt87/multiverse/ui", ""))
+object Main extends StreamApp[IO] {
 
-  private def cachedResource(config: Config): HttpService = {
-    val cachedConfig = config.copy(cacheStartegy = staticcontent.MemoryCache())
-    staticcontent.resourceService(cachedConfig)
-  }
+  private def service(server: Server): HttpService[IO] = {
+    HttpService[IO] {
 
-  private def service(server: Server) = {
-    HttpService {
-
-      case request@GET -> Root / "initial" =>
+      case GET -> Root / "initial" =>
         Ok(server.initial())
 
-      case request@GET -> Root / "satisfiableGoalSet" / stateId =>
+      case GET -> Root / "satisfiableGoalSet" / stateId =>
         Ok(server.satisfiableGoalSet(stateId))
 
-      case request@GET -> Root / "satisfyGoal" / stateId / goalId =>
+      case GET -> Root / "satisfyGoal" / stateId / goalId =>
         Ok(server.satisfyGoal(stateId, goalId))
 
-      case request@GET -> Root =>
+      case GET -> Root =>
         PermanentRedirect(uri("/ui.html"))
 
-      case request@GET -> _ if request.pathInfo.startsWith("/") =>
-        static(request)
+      case request@GET -> path if request.pathInfo.startsWith("/") =>
+        System.out.println(path)
+        StaticFile.fromResource("/edu/gatech/dt87/multiverse/ui" + path, Some(request)).getOrElseF(NotFound())
     }
   }
 
-  def main(argument: Array[String]): Unit = {
+  override def stream(argument: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] = {
 
-    if (argument.length == 1) {
-      val source = io.Source.fromFile(argument(0)).mkString
-      val parsed = Compiler.compile(source)
-      val server = parsed.map((tuple) => new Server(tuple._1, tuple._2))
-      server.foreach(s =>
-        BlazeBuilder
-          .bindHttp(8080, "localhost")
-          .mountService(service(s), "/")
-          .run
-          .awaitShutdown())
+    val source = io.Source.fromFile(argument(0)).mkString
+    val parsed = Compiler.compile(source)
+    val server: Option[Server] = parsed.map(tuple => Server(tuple._1, tuple._2))
 
-    } else {
-      println("Please provide a file.")
-    }
+    BlazeBuilder[IO]
+      .bindHttp(8080, "localhost")
+      .mountService(service(server.get), "/")
+      .serve
   }
 
 

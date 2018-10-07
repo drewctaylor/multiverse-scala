@@ -34,20 +34,20 @@ trait LexerTokens extends Tokens {
      * @param cs a sequence of strings, any one of which represents the reserved identifier or operator token
      */
     sealed class TokenReserved(cs: String*) extends TokenAbstract {
-        val invalid = cs.filter(!cs.filter(chars =>
+        val invalid: Seq[String] = cs.filter(!cs.filter(chars =>
             chars.forall(!_.isWhitespace) && (
                 chars.forall(_.isLetter) ||
                     chars.forall(!_.isLetterOrDigit))
         ).contains(_))
 
-        if (invalid.size > 0) throw new RuntimeException( s"""A reserved token must not contain whitespace and must consist of only letters or only punctuation: "${invalid.mkString("\", \"")}".""")
+        if (invalid.nonEmpty) throw new RuntimeException( s"""A reserved token must not contain whitespace and must consist of only letters or only punctuation: "${invalid.mkString("\", \"")}".""")
 
         /**
          * @return a sequence of strings, any one of which represents the reserved identifier or operator token
          */
-        def charsSeq = cs
+        def charsSeq: Seq[String] = cs
 
-        def chars = cs.head
+        def chars: String = cs.head
     }
 
     /**
@@ -111,12 +111,12 @@ trait LexerTokens extends Tokens {
     /**
      * A map from a string to the associated reserved operator.
      */
-    val tokenReservedOperatorMap = tokenReservedMap.filterKeys(_.forall(!_.isLetterOrDigit))
+    val tokenReservedOperatorMap: Map[String, TokenReserved] = tokenReservedMap.filterKeys(_.forall(!_.isLetterOrDigit))
 
     /**
      * A map from a string to the associated reserved identifier.
      */
-    val tokenReservedIdentifierMap = tokenReservedMap.filterKeys(_.forall(_.isLetter))
+    val tokenReservedIdentifierMap: Map[String, TokenReserved] = tokenReservedMap.filterKeys(_.forall(_.isLetter))
 
     case object TokenOperatorAnd extends TokenReserved("and", "&&") with TokenOperatorBinary
 
